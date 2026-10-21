@@ -1,7 +1,0 @@
-flask
-flask-cors
-gunicorn
-selenium
-beautifulsoup4
-firebase-admin
-requests
