@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة التحكم والإدارة الشاملة | YAM FOR CARS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+    <style> 
+        body { font-family: 'Cairo', sans-serif; background-color: #050505; color: white; -webkit-tap-highlight-color: transparent; }
+        .gold-border { border-color: rgba(212, 175, 55, 0.3); }
+        .gold-text { color: #d4af37; }
+        .card-box {
+            background: linear-gradient(145deg, #0d0d0d, #060606);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            box-shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.9);
+        }
+        .custom-input {
+            width: 100%;
+            padding: 10px 14px;
+            border-radius: 12px;
+            background-color: #121212;
+            border: 1px solid rgba(212, 175, 55, 0.25);
+            color: white;
+            font-size: 13px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+        .custom-input:focus {
+            border-color: #d4af37;
+            box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.15);
+        }
+        select.custom-input option {
+            background-color: #121212;
+            color: white;
+        }
+        @keyframes spinGold {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .spinner-gold {
+            border: 3px solid rgba(212, 175, 55, 0.1);
+            border-top: 3px solid #d4af37;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spinGold 0.8s linear infinite;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between selection:bg-[#d4af37] selection:text-black">
+
+    <!-- شاشة التحميل -->
+    <div id="loading-overlay" class="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex flex-col items-center justify-center space-y-3 transition-opacity duration-300">
+        <div class="spinner-gold"></div>
+        <p class="text-xs gold-text font-bold tracking-widest animate-pulse">جاري تحميل النظام والقوائم الشاملة...</p>
+    </div>
+
+    <!-- شاشة تسجيل الدخول -->
+    <div id="login-screen" class="fixed inset-0 z-50 bg-black flex items-center justify-center p-4">
+        <div class="card-box p-8 rounded-3xl border gold-border w-full max-w-sm text-center space-y-6 shadow-2xl">
+            <div class="w-20 h-20 bg-[#d4af37]/10 border gold-border rounded-2xl flex items-center justify-center mx-auto text-[#d4af37] text-3xl shadow-inner">
+                <i class="fa-solid fa-shield-halved"></i>
+            </div>
+            <div>
+                <h1 class="text-xl font-black text-white">تسجيل دخول الإدارة</h1>
+                <p class="text-xs text-neutral-400 mt-1">الرقم الوظيفي (100) وكلمة المرور (100)</p>
+            </div>
+            <form id="login-form" class="space-y-4">
+                <input type="text" id="emp-id" placeholder="الرقم الوظيفي" required class="custom-input text-center font-mono">
+                <input type="password" id="emp-pass" placeholder="كلمة المرور" required class="custom-input text-center font-mono">
+                <button type="submit" class="w-full py-3.5 bg-gradient-to-r from-[#d4af37] to-[#aa8c2c] text-black font-black text-sm rounded-xl hover:opacity-90 transition-all shadow-lg">
+                    دخول النظام
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- لوحة التحكم الرئيسية -->
+    <div id="admin-dashboard" class="flex-1 flex flex-col hidden">
+        <header class="bg-black/95 border-b gold-border h-16 px-4 sm:px-8 flex items-center justify-between sticky top-0 z-40 backdrop-blur-md">
+            <div class="flex items-center gap-3 cursor-pointer" id="logo-home-btn">
+                <div class="w-10 h-10 rounded-xl bg-[#d4af37]/10 border gold-border flex items-center justify-center text-[#d4af37]">
+                    <i class="fa-solid fa-gauge-high"></i>
+                </div>
+                <div>
+                    <span class="text-xs sm:text-sm font-black tracking-wider block">YAM FOR CARS</span>
+                    <span class="text-[9px] gold-text font-semibold tracking-widest block">لوحة التحكم الشاملة</span>
+                </div>
+            </div>
+            <div class="flex items-center gap-3">
+                <span id="logged-user-name" class="text-xs gold-text font-bold"></span>
+                <button id="logout-btn" class="px-3 py-2 bg-neutral-900 border gold-border text-neutral-300 hover:text-red-400 text-xs font-bold rounded-xl transition-all">
+                    <i class="fa-solid fa-right-from-bracket"></i> خروج
+                </button>
+            </div>
+        </header>
+
+        <main class="flex-1 max-w-4xl mx-auto w-full p-4 sm:p-6 space-y-6 my-auto">
+            <div id="section-home" class="space-y-6">
+                <div class="text-center space-y-2 py-2">
+                    <h1 class="text-2xl sm:text-3xl font-black text-white">لوحة تحكم المعرض والإدارة</h1>
+                    <p class="text-xs sm:text-sm text-neutral-400">اختر القسم المطلوب لإدارة المحتوى:</p>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div id="btn-open-add" class="card-box p-5 rounded-2xl border gold-border hover:border-[#d4af37] transition-all cursor-pointer flex flex-col items-center text-center gap-3 group">
+                        <div class="w-12 h-12 rounded-xl bg-[#d4af37]/10 border gold-border text-[#d4af37] flex items-center justify-center text-xl group-hover:bg-[#d4af37] group-hover:text-black transition-all">
+                            <i class="fa-solid fa-car"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xs font-black text-white group-hover:text-amber-300 transition-colors">إضافة سيارة</h3>
+                            <p class="text-[10px] text-neutral-400 mt-0.5">إدراج سيارة مع الوارد والملاحظات.</p>
+                        </div>
+                    </div>
+
+                    <div id="btn-nav-cars" class="card-box p-5 rounded-2xl border gold-border hover:border-[#d4af37] transition-all cursor-pointer flex flex-col items-center text-center gap-3 group">
+                        <div class="w-12 h-12 rounded-xl bg-[#d4af37]/10 border gold-border text-[#d4af37] flex items-center justify-center text-xl group-hover:bg-[#d4af37] group-hover:text-black transition-all">
+                            <i class="fa-solid fa-list-check"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xs font-black text-white group-hover:text-amber-300 transition-colors">إدارة السيارات</h3>
+                            <p class="text-[10px] text-neutral-400 mt-0.5">تعديل وحذف سيارات المعرض.</p>
+                        </div>
+                    </div>
+
+                    <div id="btn-nav-employees" class="card-box p-5 rounded-2xl border gold-border hover:border-[#d4af37] transition-all cursor-pointer flex flex-col items-center text-center gap-3 group">
+                        <div class="w-12 h-12 rounded-xl bg-[#d4af37]/10 border gold-border text-[#d4af37] flex items-center justify-center text-xl group-hover:bg-[#d4af37] group-hover:text-black transition-all">
+                            <i class="fa-solid fa-users-gear"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xs font-black text-white group-hover:text-amber-300 transition-colors">إدارة الموظفين</h3>
+                            <p class="text-[10px] text-neutral-400 mt-0.5">الأرقام الوظيفية والصلاحيات.</p>
+                        </div>
+                    </div>
+
+                    <div id="btn-nav-stats" class="card-box p-5 rounded-2xl border gold-border hover:border-[#d4af37] transition-all cursor-pointer flex flex-col items-center text-center gap-3 group">
+                        <div class="w-12 h-12 rounded-xl bg-[#d4af37]/10 border gold-border text-[#d4af37] flex items-center justify-center text-xl group-hover:bg-[#d4af37] group-hover:text-black transition-all">
+                            <i class="fa-solid fa-chart-pie"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xs font-black text-white group-hover:text-amber-300 transition-colors">إحصائيات المعرض</h3>
+                            <p class="text-[10px] text-neutral-400 mt-0.5">متابعة أداء النظام.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="section-cars" class="space-y-4 hidden">
+                <div class="flex items-center justify-between pb-3 border-b gold-border">
+                    <div class="flex items-center gap-2">
+                        <button class="btn-back-home px-3 py-1.5 rounded-xl bg-neutral-900 border gold-border text-xs text-neutral-300"><i class="fa-solid fa-arrow-right"></i> القائمة</button>
+                        <h2 class="text-sm font-black text-white">قائمة سيارات المعرض</h2>
+                    </div>
+                    <span id="total-cars-count" class="text-xs font-mono text-[#d4af37]">0 سيارة</span>
+                </div>
+                <div id="admin-cars-list" class="space-y-3"></div>
+            </div>
+
+            <div id="section-employees" class="space-y-4 hidden">
+                <div class="flex items-center justify-between pb-3 border-b gold-border">
+                    <div class="flex items-center gap-2">
+                        <button class="btn-back-home px-3 py-1.5 rounded-xl bg-neutral-900 border gold-border text-xs text-neutral-300"><i class="fa-solid fa-arrow-right"></i> القائمة</button>
+                        <h2 class="text-sm font-black text-white">إدارة الموظفين والصلاحيات</h2>
+                    </div>
+                    <button id="btn-open-add-emp" class="px-3 py-1.5 bg-[#d4af37] text-black text-xs font-black rounded-xl shadow">إضافة موظف جديد</button>
+                </div>
+                <div id="admin-employees-list" class="space-y-3"></div>
+            </div>
+
+            <div id="section-stats" class="space-y-4 hidden">
+                <div class="flex items-center justify-between pb-3 border-b gold-border">
+                    <div class="flex items-center gap-2">
+                        <button class="btn-back-home px-3 py-1.5 rounded-xl bg-neutral-900 border gold-border text-xs text-neutral-300"><i class="fa-solid fa-arrow-right"></i> القائمة</button>
+                        <h2 class="text-sm font-black text-white">إحصائيات المعرض والنظام</h2>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    <div class="card-box p-4 rounded-2xl border gold-border text-center space-y-1">
+                        <span class="text-xs text-neutral-400 block font-bold">إجمالي السيارات</span>
+                        <h3 id="stat-total-cars" class="text-2xl font-black font-mono gold-text">0</h3>
+                    </div>
+                    <div class="card-box p-4 rounded-2xl border gold-border text-center space-y-1">
+                        <span class="text-xs text-neutral-400 block font-bold">السيارات المتوفرة</span>
+                        <h3 id="stat-available-cars" class="text-2xl font-black font-mono text-emerald-400">0</h3>
+                    </div>
+                    <div class="card-box p-4 rounded-2xl border gold-border text-center space-y-1">
+                        <span class="text-xs text-neutral-400 block font-bold">السيارات المباعة</span>
+                        <h3 id="stat-sold-cars" class="text-2xl font-black font-mono text-rose-400">0</h3>
+                    </div>
+                    <div class="card-box p-4 rounded-2xl border gold-border text-center space-y-1">
+                        <span class="text-xs text-neutral-400 block font-bold">عدد الموظفين</span>
+                        <h3 id="stat-total-employees" class="text-2xl font-black font-mono text-amber-300">0</h3>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- نافذة إضافة وتعديل موظف -->
+    <div id="emp-modal" class="fixed inset-0 z-50 bg-black/95 backdrop-blur-md flex items-center justify-center p-4 hidden">
+        <div class="card-box p-6 rounded-3xl border gold-border w-full max-w-md space-y-4">
+            <div class="flex items-center justify-between pb-2 border-b gold-border">
+                <h3 id="emp-modal-title" class="text-sm font-black text-white">إضافة موظف جديد</h3>
+                <button id="btn-close-emp-modal" class="text-neutral-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="emp-form" class="space-y-3">
+                <input type="hidden" id="emp-key">
+                <div>
+                    <label class="block text-[11px] text-neutral-400 mb-1">اسم الموظف</label>
+                    <input type="text" id="new-emp-name" placeholder="مثال: يوسف علي" required class="custom-input">
+                </div>
+                <div>
+                    <label class="block text-[11px] text-neutral-400 mb-1">الرقم الوظيفي</label>
+                    <input type="text" id="new-emp-id" placeholder="مثال: 101" required class="custom-input font-mono">
+                </div>
+                <div>
+                    <label class="block text-[11px] text-neutral-400 mb-1">كلمة المرور</label>
+                    <input type="text" id="new-emp-pass" placeholder="كلمة المرور" required class="custom-input font-mono">
+                </div>
+                <div class="flex justify-end gap-2 pt-2">
+                    <button type="button" id="btn-cancel-emp-modal" class="px-3 py-2 bg-neutral-900 border gold-border text-xs text-neutral-300 rounded-xl">إلغاء</button>
+                    <button type="submit" class="px-4 py-2 bg-[#d4af37] text-black text-xs font-black rounded-xl shadow">حفظ الموظف</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- نافذة إضافة وتعديل سيارة -->
+    <div id="car-modal" class="fixed inset-0 z-50 bg-black/95 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 hidden overflow-y-auto">
+        <div class="card-box p-5 sm:p-6 rounded-3xl border gold-border w-full max-w-2xl space-y-4 my-auto relative max-h-[92vh] overflow-y-auto">
+            <div class="flex items-center justify-between pb-3 border-b gold-border sticky top-0 bg-[#0d0d0d] z-10">
+                <h3 id="modal-title" class="text-base font-black text-white">إضافة سيارة جديدة</h3>
+                <button id="btn-close-modal" class="text-neutral-400 hover:text-white text-xl p-1"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
+            <form id="car-form" class="space-y-4">
+                <input type="hidden" id="car-id">
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                        <label class="block text-xs text-neutral-300 font-bold mb-1">1. الشركة (Brand)</label>
+                        <select id="f-brand" class="custom-input text-xs" required>
+                            <option value="">اختر الشركة...</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-neutral-300 font-bold mb-1">2. الطراز (Model)</label>
+                        <select id="f-title-select" class="custom-input text-xs" required>
+                            <option value="">اختر الطراز...</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-neutral-300 font-bold mb-1">3. الفئة (Trim)</label>
+                        <select id="f-trim" class="custom-input text-xs" required>
+                            <option value="">اختر الفئة...</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs text-neutral-300 font-bold mb-1">4. سنة الصنع (Year)</label>
+                        <select id="f-year" class="custom-input text-xs font-mono" required>
+                            <option value="">اختر السنة...</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-neutral-300 font-bold mb-1">5. الممشى (Mileage)</label>
+                        <input type="text" id="f-mileage" placeholder="مثال: أصفار / 45,000 كم" required class="custom-input">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                        <label class="block text-xs text-neutral-300 font-bold mb-1">6. حالة السوق</label>
+                        <select id="f-marketType" class="custom-input text-xs font-bold" required>
+                            <option value="السوق الجديد">السوق الجديد (أصفار)</option>
+                            <option value="السوق المستعمل">السوق المستعمل</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-neutral-300 font-bold mb-1">7. السعر (Price)</label>
+                        <input type="text" id="f-price" placeholder="مثال: 120,000 ريال" required class="custom-input">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-neutral-300 font-bold mb-1">8. حالة المعرض</label>
+                        <select id="f-statusTag" class="custom-input text-xs font-bold text-amber-400">
+                            <option value="متوفرة">متوفرة</option>
+                            <option value="مباعة">مباعة</option>
+                            <option value="محجوزة">محجوزة</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- ميزة الوارد والملاحظات الجديدة -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs text-neutral-300 font-bold mb-1">9. نوع الوارد (Source)</label>
+                        <select id="f-importType" class="custom-input text-xs font-bold text-cyan-300">
+                            <option value="وارد كوريا الجنوبية">وارد كوريا الجنوبية</option>
+                            <option value="وارد السعودية (وكالة)">وارد السعودية (وكالة)</option>
+                            <option value="وارد أمريكي">وارد أمريكي</option>
+                            <option value="وارد خليجي">وارد خليجي</option>
+                            <option value="أخرى">أخرى</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-neutral-300 font-bold mb-1">10. ملاحظات إضافية</label>
+                        <input type="text" id="f-notes" placeholder="مثال: فل كامل، تحت الوصاية، بدون صدمات..." class="custom-input">
+                    </div>
+                </div>
+
+                <div class="space-y-2 pt-1 border-t gold-border">
+                    <label class="block text-xs text-neutral-300 font-bold">11. رفع صور السيارة</label>
+                    <div class="relative flex items-center justify-center p-4 border-2 border-dashed border-neutral-700 hover:border-[#d4af37] rounded-2xl bg-neutral-900/50 cursor-pointer transition-all">
+                        <input type="file" id="f-images-input" multiple accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+                        <div class="text-center space-y-1">
+                            <i class="fa-solid fa-cloud-arrow-up text-2xl text-[#d4af37]"></i>
+                            <p class="text-xs text-neutral-300 font-bold">اضغط هنا لرفع الصور من جهازك</p>
+                        </div>
+                    </div>
+                    <div id="image-preview-container" class="grid grid-cols-4 sm:grid-cols-6 gap-2 pt-2"></div>
+                </div>
+
+                <div class="flex items-center justify-end gap-3 pt-3 border-t gold-border">
+                    <button type="button" id="btn-cancel-modal" class="px-4 py-2.5 bg-neutral-900 border gold-border text-neutral-300 rounded-xl text-xs">إلغاء</button>
+                    <button type="submit" id="save-btn" class="px-6 py-2.5 bg-[#d4af37] text-black font-black rounded-xl text-xs shadow-lg">حفظ ونشر البيانات</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <footer class="bg-black text-neutral-500 py-3 border-t gold-border text-center text-[11px] font-mono shrink-0">
+        YAM FOR CARS Admin System © 2026
+    </footer>
+
+    <!-- قاعدة البيانات البرمجية الشاملة -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, set, remove, push, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        const firebaseConfig = {
+            databaseURL: "https://yam-for-cars-default-rtdb.firebaseio.com",
+            projectId: "yam-for-cars"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        const carDatabase = {
+            "تويوتا (Toyota)": {
+                "كامري": ["LE قياسي", "GLE نصف فل", "SE رياضية", "Grand Touring", "فل كامل"],
+                "كورولا": ["XLI استاندارد", "Myli نصف فل", "GLI فل كامل", "Hybrid صالون"],
+                "لاندكروزر": ["GXR (V6)", "VXR (V8 / TwinTurbo)", "GR-Sport رياضي", "GX ديزل"],
+                "برادو": ["TX استاندارد", "TXL نصف فل", "Limited فل كامل", "Adventure"],
+                "راف فور": ["LE الدفع الثنائي", "XLE دفع رباعي", "Limited فاخرة", "Adventure"],
+                "هايلاندر": ["LE", "GLE", "Limited فاخرة", "Platinum"],
+                "يارس": ["استاندر صالون", "نصف فل", "فل كامل"],
+                "أفالون": ["XLE", "Limited", "Touring"],
+                "فورتشنر": ["GX استاندارد", "VX فل كامل", "TRD رياضي"],
+                "سوبرا": ["3.0 Premium", "GT4 Edition"]
+            },
+            "هيونداي (Hyundai)": {
+                "سوناتا": ["Smart استاندارد", "Comfort نصف فل", "Premium فل كامل", "N-Line رياضية"],
+                "إلنترا": ["Smart", "Comfort", "Luxury", "N-Line"],
+                "توسان": ["استاندر", "نصف فل كومفورت", "فل كامل بريميوم"],
+                "سانتافي": ["Smart", "Mid", "Full Option"],
+                "أكسنت": ["Basic", "Mid", "High"],
+                "باليساد": ["Luxury", "Calligraphy الفئة العليا"]
+            },
+            "كيا (Kia)": {
+                "K5": ["LX استاندارد", "EX نصف فل", "GT-Line رياضية", "GT توربو"],
+                "سيراتو": ["LX", "EX", "SX فاخر"],
+                "سبورتاج": ["LX", "EX", "SX High"],
+                "سورينتو": ["Standard", "Mid", "Full Option"],
+                "تيلورايد": ["LX", "EX", "SX Prestige"]
+            },
+            "مرسيدس بنز (Mercedes-Benz)": {
+                "S-Class": ["S500 4MATIC", "S580 Luxury", "Maybach S680"],
+                "E-Class": ["E200 Avantgarde", "E300 AMG Line", "E450 4MATIC"],
+                "C-Class": ["C200", "C300 AMG", "C43 AMG"],
+                "G-Class (جي كلاس)": ["G63 AMG", "G500 V8", "G400d ديزل"],
+                "GLE": ["GLE 350", "GLE 450 AMG Line", "GLE 53 AMG"],
+                "GLS": ["GLS 450", "GLS 600 Maybach"]
+            },
+            "بي إم دبليو (BMW)": {
+                "الفئة السابعة": ["740i Pure Excellence", "760i xDrive M Sport"],
+                "الفئة الخامسة": ["520i", "530i M Sport", "i5 كهربائية"],
+                "الفئة الثالثة": ["320i", "330i M Sport", "M340i"],
+                "X5": ["xDrive40i", "M50i", "X5 M Competition"],
+                "X7": ["xDrive40i", "M60i Luxury"],
+                "M4": ["Competition Coupe", "CS"]
+            },
+            "لكزس (Lexus)": {
+                "LX600": ["Elite", "VIP أربع مقاعد", "F-Sport رياضي", "Adventure"],
+                "RX350": ["Elegant", "Elite", "F-Sport"],
+                "ES350": ["Elegant", "Premier", "F-Sport"],
+                "LS500": ["Premier", "Platinum فاخرة"],
+                "GX460": ["Elite", "Standard"],
+                "IS350": ["Premier", "F-Sport"]
+            },
+            "جينيسيس (Genesis)": {
+                "G80": ["Standard", "Royal", "Sport"],
+                "G90": ["Prestige", "Limousine"],
+                "GV70": ["Standard", "Sport Package"],
+                "GV80": ["6-Seater", "7-Seater Royal"]
+            },
+            "نيسان (Nissan)": {
+                "باترول": ["XE استاندارد", "SE تيتانيوم", "LE فل كامل", "Nismo رياضي"],
+                "التيما": ["S", "SV", "SL", "SR Turbo"],
+                "صني": ["S", "SV", "SL"],
+                "إكس تريل": ["S", "SV", "SL 7-Seater"],
+                "جي تي آر": ["Black Edition", "Nismo"]
+            },
+            "فورد (Ford)": {
+                "اكسبلورر": ["XLT", "Limited", "ST رياضي", "Platinum"],
+                "إكسبيديشن": ["XLT", "Limited", "Platinum", "Timberline"],
+                "تورس": ["Ambient", "Trend", "Titanium"],
+                "F-150": ["XL", "XLT", "Lariat", "Raptor"],
+                "مستانج": ["EcoBoost", "GT V8", "Dark Horse"]
+            },
+            "شيفروليه (Chevrolet)": {
+                "تاهو": ["LS", "LT", "Z71 أوف رود", "High Country"],
+                "سوبربان": ["LS", "LT", "Z71", "Premier"],
+                "كابريس": ["LTZ", "Royal"],
+                "كورفت": ["Stingray Z51", "Z06"],
+                "سلفرادو": ["Trail Boss", "High Country"]
+            },
+            "جي إم سي (GMC)": {
+                "يوكن": ["SLE", "SLT", "AT4 أوف رود", "Denali Ultimate"],
+                "سيريرا": ["SLE", "AT4", "Denali"],
+                "ترينان": ["SLE", "SLT"]
+            },
+            "دودج وكرايسلر (Dodge & Chrysler)": {
+                "تشارجر": ["SXT", "RT V8", "Scat Pack", "Hellcat"],
+                "تشالنجر": ["GT", "RT", "Hellcat Redeye"],
+                "دورانجو": ["SXT", "RT", "Hellcat"],
+                "كرايسلر 300": ["Luxury", "SRT"]
+            },
+            "رام (RAM)": {
+                "1500": ["Tradesman", "Laramie", "Limited", "TRX مكينة هيلكات"]
+            },
+            "تسلا (Tesla)": {
+                "Model 3": ["Standard Range", "Long Range", "Performance"],
+                "Model Y": ["Long Range AWD", "Performance"],
+                "Model S": ["Long Range", "Plaid"],
+                "Model X": ["Plaid", "Long Range"],
+                "Cybertruck": ["AWD", "Cyberbeast"]
+            },
+            "بورش (Porsche)": {
+                "كايين": ["Base", "S", "Turbo GT"],
+                "باناميرا": ["4S", "Turbo S"],
+                "911": ["Carrera", "Turbo S", "GT3 RS"],
+                "ماكان": ["Base", "GTS", "Electric"]
+            },
+            "أودي (Audi)": {
+                "A6": ["Advanced", "S-Line"],
+                "A8": ["Luxury", "Long"],
+                "Q7": ["Design", "S-Line"],
+                "Q8": ["S-Line", "RSQ8"]
+            },
+            "فولكس واجن (Volkswagen)": {
+                "طوارق": ["Trendline", "Atmosphere", "R-Line"],
+                "تيجوان": ["Life", "R-Line"],
+                "جولف": ["GTI", "R"]
+            },
+            "رينج روفر وليكند روفر (Land Rover)": {
+                "رينج روفر": ["SE", "Autobiography", "SV"],
+                "سبورت": ["Dynamic SE", "Autobiography"],
+                "فيلار": ["Dynamic HSE"],
+                "ديفندر": ["90", "110", "V8 Edition"]
+            },
+            "بنتلي (Bentley)": {
+                "كونتيننتال GT": ["V8", "W12 Speed"],
+                "بنتايجا": ["V8", "Azure"],
+                "فلاينج سبور": ["V8", "Mulliner"]
+            },
+            "رولز رويس (Rolls-Royce)": {
+                "فانتوم": ["Extended", "Series II"],
+                "غوست": ["Standard", "Black Badge"],
+                "كالينان": ["Standard", "Black Badge"],
+                "سبيكتر": ["Electric Luxury"]
+            },
+            "فيراري (Ferrari)": {
+                "F8": ["Tributo", "Spider"],
+                "296 GTB": ["Hybrid"],
+                "روما": ["Coupe"],
+                "بروسانغوي": ["V12 SUV"]
+            },
+            "لامبورغيني (Lamborghini)": {
+                "أوروس": ["S", "Performante"],
+                "هوراكان": ["STO", "Tecnica"],
+                "ريڤويلتو": ["V12 Hybrid"]
+            },
+            "مازيراتي (Maserati)": {
+                "جيبلي": ["Modena", "Trofeo"],
+                "لِفانتي": ["GT", "Trofeo"],
+                "غريكال": ["GT", "Trofeo"]
+            },
+            "أستون مارتن (Aston Martin)": {
+                "دراجون": ["V8 Coupe"],
+                "دي بي إكس": ["707 High Performance"]
+            },
+            "ماكلارين (McLaren)": {
+                "720S": ["Performance"],
+                "Artura": ["Hybrid"]
+            },
+            "نيسان / إنفينيتي (Infiniti)": {
+                "QX80": ["Sensory", "Autograph"],
+                "QX60": ["Luxe", "Autograph"]
+            },
+            "كاديلاك (Cadillac)": {
+                "اسكاليد": ["Luxury", "Sport", "Platinum", "ESV"],
+                "إسترستيك": ["EV Luxury"]
+            },
+            "لينكون (Lincoln)": {
+                "نافيجاتور": ["Reserve", "Black Label"],
+                "أفياتور": ["Reserve"]
+            },
+            "هوندا (Honda)": {
+                "أكورد": ["LX", "EX-L", "Sport Hybrid"],
+                "سيفيك": ["Sport", "Type R"],
+                "بايلوت": ["EX-L", "Touring", "Elite"]
+            },
+            "مازدا (Mazda)": {
+                "مازدا 6": ["Core", "High", "Signature"],
+                "CX-90": ["Core", "S-Grade", "Signature"],
+                "CX-60": ["Full Option"]
+            },
+            "ميتسوبيشي (Mitsubishi)": {
+                "باجيرو": ["GLS V6", "Exceed"],
+                "مونتيرو سبورت": ["HL", "Top"],
+                "إكليبس كروس": ["High"]
+            },
+            "سوبارو (Subaru)": {
+                "فورستر": ["Premium", "Limited"],
+                "أوت باك": ["Touring"],
+                "WRX": ["STI Performance"]
+            },
+            "سوزوكي (Suzuki)": {
+                "جراند فيتارا": ["GLX"],
+                "جيمني": ["3-Door", "5-Door"]
+            },
+            "إيسوزو (Isuzu)": {
+                "ديماكس": ["S-Cab", "D-Cab High"]
+            },
+            "شيري (Chery)": {
+                "تيجو 8 برو": ["Comfort", "Luxury", "Flagship"],
+                "تيجو 7 برو": ["Comfort", "Luxury"],
+                "أريزو 8": ["Comfort", "Luxury"]
+            },
+            "جيلي (Geely)": {
+                "مونجارو": ["GC", "GK", "GF فل كامل"],
+                "كولراي": ["GS", "GF", "GF+ رياضي"],
+                "إمجراند": ["GS", "GK"],
+                "توجيرا": ["GF"]
+            },
+            "هافال (Haval)": {
+                "H6": ["Active", "Intelligent", "Supreme"],
+                "Jolion": ["Basic", "Active", "Supreme"],
+                "Dargo": ["Adventure", "Supreme"],
+                "H9": ["Luxury"]
+            },
+            "بي واي دي (BYD)": {
+                "Song Plus": ["Standard", "Flagship"],
+                "Han": ["EV Luxury"],
+                "Seal": ["Performance AWD"],
+                "Qin Plus": ["DM-i"]
+            },
+            "شانجان (Changan)": {
+                "UNI-K": ["Elite", "Royal"],
+                "UNI-T": ["Elite"],
+                "UNI-V": ["Sport"],
+                "إيدو": ["Plus Trend"]
+            },
+            "إم جي (MG)": {
+                "MG 7": ["Luxury"],
+                "MG Whale": ["Standard"],
+                "RX8": ["LU Luxury", "STD"],
+                "GT": ["Lux"]
+            },
+            "جيتور (Jetour)": {
+                "T2": ["Explorer Off-Road"],
+                "X70 Plus": ["Luxury"],
+                "Dashing": ["Smart"]
+            },
+            "إكسيد (Exeed)": {
+                "RX": ["Flagship"],
+                "LX": ["Luxury"],
+                "TXl": ["Elite"]
+            },
+            "لوسيد (Lucid)": {
+                "Air": ["Pure", "Grand Touring", "Sapphire"]
+            },
+            "ريفيان (Rivian)": {
+                "R1T": ["Adventure Package"],
+                "R1S": ["Tri-Max"]
+            },
+            "بيجو (Peugeot)": {
+                "508": ["GT Line"],
+                "3008": ["Allure", "GT"]
+            },
+            "رينو (Renault)": {
+                "داستر": ["PE", "SE"],
+                "كوليوس": ["LE High"]
+            }
+        };
+
+        let currentUploadedImages = [];
+        let allCarsData = {};
+        let allEmployeesData = {};
+
+        window.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('loading-overlay').classList.add('hidden');
+
+            const brandSelect = document.getElementById('f-brand');
+            Object.keys(carDatabase).forEach(brand => {
+                const opt = document.createElement('option');
+                opt.value = brand;
+                opt.textContent = brand;
+                brandSelect.appendChild(opt);
+            });
+
+            const yearSelect = document.getElementById('f-year');
+            for (let y = 2026; y >= 2010; y--) {
+                const opt = document.createElement('option');
+                opt.value = String(y);
+                opt.textContent = String(y);
+                yearSelect.appendChild(opt);
+            }
+
+            listenToData();
+
+            document.getElementById('login-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const empId = document.getElementById('emp-id').value.trim();
+                const empPass = document.getElementById('emp-pass').value.trim();
+
+                let foundUser = null;
+                if (empId === "100" && empPass === "100") {
+                    foundUser = "المدير العام";
+                } else {
+                    Object.keys(allEmployeesData).forEach(k => {
+                        const emp = allEmployeesData[k];
+                        if (String(emp.jobId) === empId && String(emp.password) === empPass) {
+                            foundUser = emp.name;
+                        }
+                    });
+                }
+
+                if (foundUser) {
+                    document.getElementById('logged-user-name').innerText = "مرحباً: " + foundUser;
+                    document.getElementById('login-screen').classList.add('hidden');
+                    document.getElementById('admin-dashboard').classList.remove('hidden');
+                } else {
+                    alert('عفواً، الرقم الوظيفي أو كلمة المرور غير صحيحة!');
+                }
+            });
+
+            document.getElementById('f-brand').addEventListener('change', (e) => {
+                updateModelDropdown(e.target.value);
+            });
+
+            document.getElementById('f-title-select').addEventListener('change', (e) => {
+                const brand = document.getElementById('f-brand').value;
+                updateTrimDropdown(brand, e.target.value);
+            });
+
+            document.getElementById('btn-open-add').addEventListener('click', openCarModalForAdd);
+            document.getElementById('btn-nav-cars').addEventListener('click', () => showSection('section-cars'));
+            document.getElementById('btn-nav-employees').addEventListener('click', () => showSection('section-employees'));
+            document.getElementById('btn-nav-stats').addEventListener('click', () => showSection('section-stats'));
+
+            document.querySelectorAll('.btn-back-home, #logo-home-btn').forEach(btn => {
+                btn.addEventListener('click', () => showSection('section-home'));
+            });
+
+            document.getElementById('logout-btn').addEventListener('click', () => {
+                document.getElementById('admin-dashboard').classList.add('hidden');
+                document.getElementById('login-screen').classList.remove('hidden');
+            });
+
+            document.getElementById('btn-close-modal').addEventListener('click', () => document.getElementById('car-modal').classList.add('hidden'));
+            document.getElementById('btn-cancel-modal').addEventListener('click', () => document.getElementById('car-modal').classList.add('hidden'));
+            document.getElementById('btn-close-emp-modal').addEventListener('click', () => document.getElementById('emp-modal').classList.add('hidden'));
+            document.getElementById('btn-cancel-emp-modal').addEventListener('click', () => document.getElementById('emp-modal').classList.add('hidden'));
+
+            document.getElementById('f-images-input').addEventListener('change', (e) => {
+                const files = Array.from(e.target.files);
+                files.forEach(file => {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        currentUploadedImages.push(event.target.result);
+                        renderImagePreviews();
+                    };
+                    reader.readAsDataURL(file);
+                });
+            });
+
+            // تعديل دالة حفظ السيارة لضمان عدم التعليق وإضافة الوارد والملاحظات
+            document.getElementById('car-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const saveBtn = document.getElementById('save-btn');
+                saveBtn.disabled = true;
+                saveBtn.innerText = 'جاري الحفظ...';
+
+                const carId = document.getElementById('car-id').value;
+                const carData = {
+                    brand: document.getElementById('f-brand').value,
+                    title: document.getElementById('f-title-select').value,
+                    trim: document.getElementById('f-trim').value,
+                    year: document.getElementById('f-year').value,
+                    mileage: document.getElementById('f-mileage').value,
+                    marketType: document.getElementById('f-marketType').value,
+                    price: document.getElementById('f-price').value,
+                    statusTag: document.getElementById('f-statusTag').value,
+                    importType: document.getElementById('f-importType').value,
+                    notes: document.getElementById('f-notes').value,
+                    images: currentUploadedImages.length > 0 ? currentUploadedImages : ['https://via.placeholder.com/400x250?text=No+Image']
+                };
+
+                try {
+                    if (carId) {
+                        await set(ref(db, 'cars/' + carId), carData);
+                        alert('✨ تم تحديث بيانات السيارة بنجاح!');
+                    } else {
+                        await push(ref(db, 'cars'), carData);
+                        alert('✨ تم حفظ ونشر السيارة الجديدة بنجاح!');
+                    }
+                    document.getElementById('car-modal').classList.add('hidden');
+                } catch (err) {
+                    alert('خطأ في الحفظ: ' + err.message);
+                } finally {
+                    saveBtn.disabled = false;
+                    saveBtn.innerText = 'حفظ ونشر البيانات';
+                }
+            });
+
+            document.getElementById('btn-open-add-emp').addEventListener('click', () => {
+                document.getElementById('emp-form').reset();
+                document.getElementById('emp-key').value = '';
+                document.getElementById('emp-modal-title').innerText = 'إضافة موظف جديد';
+                document.getElementById('emp-modal').classList.remove('hidden');
+            });
+
+            document.getElementById('emp-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const key = document.getElementById('emp-key').value;
+                const empData = {
+                    name: document.getElementById('new-emp-name').value,
+                    jobId: document.getElementById('new-emp-id').value,
+                    password: document.getElementById('new-emp-pass').value
+                };
+
+                try {
+                    if (key) {
+                        await set(ref(db, 'employees/' + key), empData);
+                        alert('✨ تم تحديث الموظف بنجاح!');
+                    } else {
+                        await push(ref(db, 'employees'), empData);
+                        alert('✨ تم حفظ الموظف الجديد بنجاح!');
+                    }
+                    document.getElementById('emp-modal').classList.add('hidden');
+                } catch (err) {
+                    alert('خطأ في الحفظ: ' + err.message);
+                }
+            });
+        });
+
+        function showSection(sectionId) {
+            ['section-home', 'section-cars', 'section-employees', 'section-stats'].forEach(s => {
+                document.getElementById(s).classList.add('hidden');
+            });
+            document.getElementById(sectionId).classList.remove('hidden');
+        }
+
+        function updateModelDropdown(brand, selectedModel = '') {
+            const titleSelect = document.getElementById('f-title-select');
+            titleSelect.innerHTML = '<option value="">اختر الطراز...</option>';
+            document.getElementById('f-trim').innerHTML = '<option value="">اختر الفئة...</option>';
+
+            if (brand && carDatabase[brand]) {
+                Object.keys(carDatabase[brand]).forEach(model => {
+                    const opt = document.createElement('option');
+                    opt.value = model;
+                    opt.textContent = model;
+                    if (model === selectedModel) opt.selected = true;
+                    titleSelect.appendChild(opt);
+                });
+            }
+        }
+
+        function updateTrimDropdown(brand, model, selectedTrim = '') {
+            const trimSelect = document.getElementById('f-trim');
+            trimSelect.innerHTML = '<option value="">اختر الفئة...</option>';
+
+            if (brand && model && carDatabase[brand] && carDatabase[brand][model]) {
+                carDatabase[brand][model].forEach(trim => {
+                    const opt = document.createElement('option');
+                    opt.value = trim;
+                    opt.textContent = trim;
+                    if (trim === selectedTrim) opt.selected = true;
+                    trimSelect.appendChild(opt);
+                });
+            }
+        }
+
+        function openCarModalForAdd() {
+            document.getElementById('car-form').reset();
+            document.getElementById('car-id').value = '';
+            document.getElementById('modal-title').innerText = 'إضافة سيارة جديدة';
+            document.getElementById('f-importType').value = 'وارد كوريا الجنوبية';
+            document.getElementById('f-notes').value = '';
+            currentUploadedImages = [];
+            document.getElementById('image-preview-container').innerHTML = '';
+            document.getElementById('car-modal').classList.remove('hidden');
+        }
+
+        function renderImagePreviews() {
+            const container = document.getElementById('image-preview-container');
+            container.innerHTML = currentUploadedImages.map((src, index) => `
+                <div class="relative w-16 h-12 rounded-lg overflow-hidden border border-amber-400">
+                    <img src="${src}" class="w-full h-full object-cover">
+                </div>
+            `).join('');
+        }
+
+        function listenToData() {
+            onValue(ref(db, 'cars'), (snapshot) => {
+                allCarsData = snapshot.val() || {};
+                renderCarsList();
+                updateStats();
+            });
+
+            onValue(ref(db, 'employees'), (snapshot) => {
+                allEmployeesData = snapshot.val() || {};
+                renderEmployeesList();
+                updateStats();
+            });
+        }
+
+        function renderCarsList() {
+            const container = document.getElementById('admin-cars-list');
+            const countEl = document.getElementById('total-cars-count');
+            if (!container) return;
+
+            const keys = Object.keys(allCarsData);
+            countEl.innerText = keys.length + ' سيارة';
+
+            if (keys.length === 0) {
+                container.innerHTML = '<div class="card-box p-6 text-center text-neutral-400 rounded-2xl">لا توجد سيارات مسجلة حالياً.</div>';
+                return;
+            }
+
+            container.innerHTML = keys.map(key => {
+                const car = allCarsData[key];
+                const img = (car.images && car.images.length > 0) ? car.images[0] : '';
+                return `
+                    <div class="card-box p-3 rounded-2xl border gold-border flex items-center justify-between gap-3">
+                        <div class="flex items-center gap-3 overflow-hidden">
+                            <img src="${img}" class="w-16 h-12 rounded-xl object-cover bg-black border gold-border shrink-0">
+                            <div class="truncate">
+                                <h4 class="text-xs font-black text-white truncate">${car.brand} - ${car.title} (${car.trim})</h4>
+                                <span class="text-[10px] gold-text font-mono block">${car.price || 'عند الاتصال'} | ${car.importType || 'وارد كوريا'} | موديل ${car.year}</span>
+                                ${car.notes ? `<span class="text-[9px] text-neutral-400 block truncate">ملاحظة: ${car.notes}</span>` : ''}
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 shrink-0">
+                            <button onclick="editCar('${key}')" class="px-3 py-1.5 bg-amber-950/80 border border-amber-600 text-amber-300 text-xs rounded-xl hover:bg-amber-900 transition-all">
+                                <i class="fa-solid fa-pen"></i> تعديل
+                            </button>
+                            <button onclick="deleteCar('${key}')" class="px-3 py-1.5 bg-red-950/80 border border-red-800 text-red-300 text-xs rounded-xl hover:bg-red-900 transition-all">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderEmployeesList() {
+            const container = document.getElementById('admin-employees-list');
+            if (!container) return;
+
+            const keys = Object.keys(allEmployeesData);
+            if (keys.length === 0) {
+                container.innerHTML = '<div class="card-box p-6 text-center text-neutral-400 rounded-2xl">لا يوجد موظفون مسجلون حالياً.</div>';
+                return;
+            }
+
+            container.innerHTML = keys.map(key => {
+                const emp = allEmployeesData[key];
+                return `
+                    <div class="card-box p-3 rounded-2xl border gold-border flex items-center justify-between gap-3">
+                        <div>
+                            <h4 class="text-xs font-black text-white">${emp.name}</h4>
+                            <span class="text-[10px] text-amber-400 font-mono">الرقم الوظيفي: ${emp.jobId} | كلمة السر: ${emp.password}</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button onclick="editEmployee('${key}')" class="px-3 py-1.5 bg-amber-950/80 border border-amber-600 text-amber-300 text-xs rounded-xl hover:bg-amber-900 transition-all">
+                                <i class="fa-solid fa-pen"></i> تعديل
+                            </button>
+                            <button onclick="deleteEmployee('${key}')" class="px-3 py-1.5 bg-red-950/80 border border-red-800 text-red-300 text-xs rounded-xl hover:bg-red-900 transition-all">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function updateStats() {
+            const carKeys = Object.keys(allCarsData);
+            const empKeys = Object.keys(allEmployeesData);
+            let available = 0;
+            let sold = 0;
+
+            carKeys.forEach(k => {
+                if (allCarsData[k].statusTag === 'مباعة') sold++;
+                else available++;
+            });
+
+            document.getElementById('stat-total-cars').innerText = carKeys.length;
+            document.getElementById('stat-available-cars').innerText = available;
+            document.getElementById('stat-sold-cars').innerText = sold;
+            document.getElementById('stat-total-employees').innerText = empKeys.length;
+        }
+
+        window.editCar = function(key) {
+            const car = allCarsData[key];
+            if (!car) return;
+
+            document.getElementById('car-id').value = key;
+            document.getElementById('modal-title').innerText = 'تعديل بيانات السيارة';
+
+            document.getElementById('f-brand').value = car.brand || '';
+            updateModelDropdown(car.brand, car.title);
+            updateTrimDropdown(car.brand, car.title, car.trim);
+
+            document.getElementById('f-year').value = car.year || '';
+            document.getElementById('f-mileage').value = car.mileage || '';
+            document.getElementById('f-marketType').value = car.marketType || 'السوق الجديد';
+            document.getElementById('f-price').value = car.price || '';
+            document.getElementById('f-statusTag').value = car.statusTag || 'متوفرة';
+            document.getElementById('f-importType').value = car.importType || 'وارد كوريا الجنوبية';
+            document.getElementById('f-notes').value = car.notes || '';
+
+            currentUploadedImages = car.images || [];
+            renderImagePreviews();
+
+            document.getElementById('car-modal').classList.remove('hidden');
+        };
+
+        window.deleteCar = async function(key) {
+            if (confirm('هل أنت تأكد من رغبتك في حذف هذه السيارة؟')) {
+                await remove(ref(db, 'cars/' + key));
+            }
+        };
+
+        window.editEmployee = function(key) {
+            const emp = allEmployeesData[key];
+            if (!emp) return;
+
+            document.getElementById('emp-key').value = key;
+            document.getElementById('new-emp-name').value = emp.name;
+            document.getElementById('new-emp-id').value = emp.jobId;
+            document.getElementById('new-emp-pass').value = emp.password;
+
+            document.getElementById('emp-modal-title').innerText = 'تعديل بيانات الموظف';
+            document.getElementById('emp-modal').classList.remove('hidden');
+        };
+
+        window.deleteEmployee = async function(key) {
+            if (confirm('هل أنت تأكد من حذف هذا الموظف؟')) {
+                await remove(ref(db, 'employees/' + key));
+            }
+        };
+    </script>
+</body>
+</html>
