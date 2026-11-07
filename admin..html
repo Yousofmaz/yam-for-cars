@@ -1,0 +1,1100 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مصاريف يام - إدارة المصاريف الشخصية</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Cairo -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- html2pdf CDN for high-quality PDF generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        gold: {
+                            400: '#FBBF24',
+                            500: '#F59E0B',
+                            600: '#D97706',
+                            glow: 'rgba(245, 158, 11, 0.25)'
+                        },
+                        dark: {
+                            base: '#0B0F17',
+                            card: '#131A27',
+                            border: '#1F293D',
+                            hover: '#1A2436'
+                        }
+                    },
+                    fontFamily: {
+                        cairo: ['Cairo', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: #0B0F17;
+            color: #E2E8F0;
+        }
+
+        /* Glassmorphism Effect */
+        .glass-panel {
+            background: rgba(19, 26, 39, 0.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+        }
+
+        .gold-glow {
+            box-shadow: 0 0 25px rgba(245, 158, 11, 0.15);
+        }
+
+        .gold-gradient {
+            background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+        }
+
+        .gold-text-gradient {
+            background: linear-gradient(135deg, #FBBF24 0%, #D97706 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Scrollbar styles */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0B0F17;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1F293D;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #F59E0B;
+        }
+    </style>
+</head>
+<body class="min-h-screen pb-12 antialiased selection:bg-amber-500/30 selection:text-amber-400">
+
+    <!-- Top Navigation Header -->
+    <header class="sticky top-0 z-40 glass-panel border-b border-gray-800/80 mb-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 rounded-2xl gold-gradient flex items-center justify-center text-slate-950 font-black text-2xl shadow-lg shadow-amber-500/20">
+                    <i class="fa-solid font-black fa-wallet"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-black tracking-tight gold-text-gradient">مصاريف يام</h1>
+                    <p class="text-xs text-gray-400">إدارة المصاريف والمالية الشخصية الذكية</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 sm:gap-3">
+                <button onclick="openReportModal()" class="px-3.5 py-2 text-xs sm:text-sm font-bold text-slate-950 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 rounded-xl shadow-lg shadow-amber-500/20 transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-file-pdf"></i>
+                    <span>توليد تقرير PDF</span>
+                </button>
+                <button onclick="loadDemoData()" class="px-3 py-2 text-xs sm:text-sm font-medium text-amber-400 hover:text-amber-300 bg-amber-500/10 hover:bg-amber-500/20 rounded-xl border border-amber-500/20 transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    <span class="hidden sm:inline">بيانات تجريبية</span>
+                </button>
+                <button onclick="exportData()" class="p-2.5 sm:px-3.5 sm:py-2 text-xs sm:text-sm font-medium text-gray-300 hover:text-white bg-dark-card border border-dark-border hover:border-gray-600 rounded-xl transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-file-export text-amber-500"></i>
+                    <span class="hidden sm:inline">تصدير</span>
+                </button>
+                <label for="importFile" class="p-2.5 sm:px-3.5 sm:py-2 text-xs sm:text-sm font-medium text-gray-300 hover:text-white bg-dark-card border border-dark-border hover:border-gray-600 rounded-xl cursor-pointer transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-file-import text-amber-500"></i>
+                    <span class="hidden sm:inline">استيراد</span>
+                </label>
+                <input type="file" id="importFile" class="hidden" accept=".json" onchange="importData(event)">
+                <button onclick="openModal()" class="px-4 py-2.5 text-xs sm:text-sm font-bold text-slate-950 gold-gradient hover:brightness-110 rounded-xl shadow-lg shadow-amber-500/25 transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-plus text-sm"></i>
+                    <span>إضافة عملية</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+
+        <!-- Financial Summary Cards -->
+        <section class="grid grid-cols-1 md:grid-cols-3 gap-5">
+            <!-- Total Income Card -->
+            <div class="glass-panel p-6 rounded-3xl relative overflow-hidden group hover:border-emerald-500/40 transition-all">
+                <div class="absolute -left-4 -bottom-4 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-all"></div>
+                <div class="flex items-center justify-between mb-4">
+                    <span class="text-sm font-semibold text-gray-400">إجمالي الدخل</span>
+                    <div class="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-lg">
+                        <i class="fa-solid fa-arrow-down-left"></i>
+                    </div>
+                </div>
+                <div class="flex items-baseline gap-2">
+                    <h3 id="totalIncome" class="text-3xl font-extrabold text-white tracking-tight">0</h3>
+                    <span class="text-sm font-bold text-emerald-400">ر.س</span>
+                </div>
+                <div class="mt-4 pt-3 border-t border-gray-800/60 flex items-center justify-between text-xs text-gray-400">
+                    <span>نسبة التدفق الإيجابي</span>
+                    <span id="incomePercentage" class="font-bold text-emerald-400">100%</span>
+                </div>
+            </div>
+
+            <!-- Total Expenses Card -->
+            <div class="glass-panel p-6 rounded-3xl relative overflow-hidden group hover:border-rose-500/40 transition-all">
+                <div class="absolute -left-4 -bottom-4 w-24 h-24 bg-rose-500/10 rounded-full blur-2xl group-hover:bg-rose-500/20 transition-all"></div>
+                <div class="flex items-center justify-between mb-4">
+                    <span class="text-sm font-semibold text-gray-400">إجمالي المصاريف</span>
+                    <div class="w-10 h-10 rounded-xl bg-rose-500/10 text-rose-400 flex items-center justify-center text-lg">
+                        <i class="fa-solid fa-arrow-up-right"></i>
+                    </div>
+                </div>
+                <div class="flex items-baseline gap-2">
+                    <h3 id="totalExpenses" class="text-3xl font-extrabold text-white tracking-tight">0</h3>
+                    <span class="text-sm font-bold text-rose-400">ر.س</span>
+                </div>
+                <div class="mt-4 pt-3 border-t border-gray-800/60 flex items-center justify-between text-xs text-gray-400">
+                    <span>أعلى فئة صرف</span>
+                    <span id="topCategoryDisplay" class="font-bold text-amber-400">-</span>
+                </div>
+            </div>
+
+            <!-- Current Balance Card -->
+            <div class="glass-panel p-6 rounded-3xl relative overflow-hidden group border-amber-500/30 gold-glow">
+                <div class="absolute -left-4 -bottom-4 w-24 h-24 bg-amber-500/10 rounded-full blur-2xl group-hover:bg-amber-500/20 transition-all"></div>
+                <div class="flex items-center justify-between mb-4">
+                    <span class="text-sm font-semibold text-gray-300">الرصيد المتبقي</span>
+                    <div id="balanceIconBox" class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-lg">
+                        <i class="fa-solid fa-scale-balanced"></i>
+                    </div>
+                </div>
+                <div class="flex items-baseline gap-2">
+                    <h3 id="netBalance" class="text-3xl font-extrabold text-white tracking-tight">0</h3>
+                    <span class="text-sm font-bold text-amber-400">ر.س</span>
+                </div>
+                <div class="mt-4 pt-3 border-t border-gray-800/60 flex items-center justify-between text-xs">
+                    <span class="text-gray-400">الحالة المالية</span>
+                    <span id="financialStatus" class="font-bold px-2 py-0.5 rounded text-amber-400 bg-amber-500/10">مستقر</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Visual Analytics Section -->
+        <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Pie/Donut Chart Container -->
+            <div class="glass-panel p-6 rounded-3xl flex flex-col justify-between">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-chart-pie text-amber-500"></i>
+                            توزيع المصاريف حسب الفئات
+                        </h2>
+                        <p class="text-xs text-gray-400 mt-0.5">تفاصيل الإنفاق لكافة الأقسام</p>
+                    </div>
+                </div>
+                <div class="relative flex items-center justify-center min-h-[260px]">
+                    <canvas id="categoryChart" width="280" height="280" class="max-w-[260px] max-h-[260px]"></canvas>
+                    <div id="chartCenterText" class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center">
+                        <span class="text-xs text-gray-400">المجموع</span>
+                        <span id="chartTotalAmount" class="text-base font-extrabold text-white">0 ر.س</span>
+                    </div>
+                </div>
+                <div id="chartLegend" class="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-6 pt-4 border-t border-gray-800/60 text-xs">
+                    <!-- Dynamic Legend Inserted Here -->
+                </div>
+            </div>
+
+            <!-- Bar Chart Container -->
+            <div class="glass-panel p-6 rounded-3xl flex flex-col justify-between">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-chart-column text-amber-500"></i>
+                            تحليل التدفق المالي الأسبوعي
+                        </h2>
+                        <p class="text-xs text-gray-400 mt-0.5">مقارنة بين الدخل والمصاريف لأحدث الأيام</p>
+                    </div>
+                </div>
+                <div class="relative w-full h-[260px] flex items-end justify-between px-2 pt-8 border-b border-gray-800/80" id="barChartContainer">
+                    <!-- Dynamic Bars Rendered Here -->
+                </div>
+                <div class="flex justify-center gap-6 mt-6 pt-4 border-t border-gray-800/60 text-xs font-semibold">
+                    <div class="flex items-center gap-2">
+                        <span class="w-3 h-3 rounded-full bg-emerald-500 inline-block"></span>
+                        <span class="text-gray-300">الدخل</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="w-3 h-3 rounded-full bg-rose-500 inline-block"></span>
+                        <span class="text-gray-300">المصاريف</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Filter & Search Controls + Transactions Table -->
+        <section class="glass-panel rounded-3xl p-6 space-y-6">
+            <!-- Header and Filter Bar -->
+            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-6 border-b border-gray-800/80">
+                <div>
+                    <h2 class="text-xl font-bold text-white flex items-center gap-2.5">
+                        <i class="fa-solid fa-list-check text-amber-500"></i>
+                        سجل العمليات المالية
+                    </h2>
+                    <p class="text-xs text-gray-400 mt-1">تصفية، ابحث، وإدارة كامل العمليات بسهولة</p>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
+                    <!-- Search input -->
+                    <div class="relative">
+                        <i class="fa-solid fa-magnifying-glass absolute right-3.5 top-3.5 text-gray-500 text-sm"></i>
+                        <input type="text" id="searchInput" oninput="renderTransactions()" placeholder="بحث في الوصف..." class="w-full pr-10 pl-3 py-2 bg-dark-base border border-dark-border focus:border-amber-500 text-sm rounded-xl text-white outline-none transition-all placeholder:text-gray-600">
+                    </div>
+
+                    <!-- Type Filter -->
+                    <select id="typeFilter" onchange="renderTransactions()" class="bg-dark-base border border-dark-border focus:border-amber-500 text-sm rounded-xl px-3 py-2 text-white outline-none transition-all">
+                        <option value="all">كافة العمليات (دخل ومصاريف)</option>
+                        <option value="expense">المصاريف فقط</option>
+                        <option value="income">الدخل فقط</option>
+                    </select>
+
+                    <!-- Category Filter -->
+                    <select id="categoryFilter" onchange="renderTransactions()" class="bg-dark-base border border-dark-border focus:border-amber-500 text-sm rounded-xl px-3 py-2 text-white outline-none transition-all">
+                        <option value="all">كافة الفئات</option>
+                        <option value="سكن وفواتير">سكن وفواتير</option>
+                        <option value="طعام ومشتريات">طعام ومشتريات</option>
+                        <option value="سيارة ونقل">سيارة ونقل</option>
+                        <option value="ترفيه وتسوق">ترفيه وتسوق</option>
+                        <option value="صحة وعناية">صحة وعناية</option>
+                        <option value="راتب ودخل">راتب ودخل</option>
+                        <option value="استثمار وأرباح">استثمار وأرباح</option>
+                        <option value="أخرى">أخرى</option>
+                    </select>
+
+                    <!-- Reset Filter Button -->
+                    <button onclick="resetFilters()" class="px-3 py-2 bg-dark-base hover:bg-dark-border border border-dark-border text-gray-300 hover:text-white rounded-xl text-sm transition-all flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-rotate-left text-xs"></i>
+                        إعادة ضبط
+                    </button>
+                </div>
+            </div>
+
+            <!-- Transactions Table List -->
+            <div class="overflow-x-auto">
+                <table class="w-full text-right border-collapse">
+                    <thead>
+                        <tr class="text-xs font-bold text-gray-400 border-b border-gray-800/80 bg-dark-base/40">
+                            <th class="py-3.5 px-4 rounded-r-xl">النوع والفئة</th>
+                            <th class="py-3.5 px-4">التاريخ</th>
+                            <th class="py-3.5 px-4">الوصف / ملاحظات</th>
+                            <th class="py-3.5 px-4">المبلغ</th>
+                            <th class="py-3.5 px-4 rounded-l-xl text-center">إجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="transactionTableBody" class="divide-y divide-gray-800/50 text-sm">
+                        <!-- Dynamic Rows -->
+                    </tbody>
+                </table>
+
+                <!-- Empty State -->
+                <div id="emptyState" class="hidden flex-col items-center justify-center py-12 text-center">
+                    <div class="w-16 h-16 rounded-full bg-dark-base flex items-center justify-center text-gray-600 text-2xl mb-3 border border-dark-border">
+                        <i class="fa-solid fa-receipt"></i>
+                    </div>
+                    <h4 class="text-base font-bold text-gray-300">لا توجد عمليات مسجلة</h4>
+                    <p class="text-xs text-gray-500 mt-1 max-w-sm">قم بإضافة عملية جديدة أو غير إعدادات التصفية للبحث عن نتائج أخرى.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal Form for Add/Edit Transaction -->
+    <div id="transactionModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm opacity-0 pointer-events-none transition-all duration-300">
+        <div class="bg-dark-card border border-dark-border rounded-3xl w-full max-w-md p-6 m-4 shadow-2xl relative transform scale-95 transition-all duration-300" id="modalContainer">
+            <div class="flex items-center justify-between pb-4 mb-4 border-b border-gray-800">
+                <h3 id="modalTitle" class="text-lg font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-circle-plus text-amber-500"></i>
+                    إضافة عملية جديدة
+                </h3>
+                <button onclick="closeModal()" class="w-8 h-8 rounded-xl bg-dark-base hover:bg-gray-800 text-gray-400 hover:text-white flex items-center justify-center transition-all">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+    <!-- Modal for Generating Custom PDF Report -->
+    <div id="reportModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md opacity-0 pointer-events-none transition-all duration-300">
+        <div class="bg-dark-card border border-amber-500/30 rounded-3xl w-full max-w-xl p-6 m-4 shadow-2xl relative transform scale-95 transition-all duration-300" id="reportModalContainer">
+            <div class="flex items-center justify-between pb-4 mb-4 border-b border-gray-800">
+                <div>
+                    <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-file-invoice-dollar text-amber-500"></i>
+                        إصدار تقرير وكشف حساب مفصل (PDF)
+                    </h3>
+                    <p class="text-xs text-gray-400 mt-0.5">حدد النطاق الزمني والتصنيفات لطباعة أو تنزيل التقرير</p>
+                </div>
+                <button onclick="closeReportModal()" class="w-8 h-8 rounded-xl bg-dark-base hover:bg-gray-800 text-gray-400 hover:text-white flex items-center justify-center transition-all">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <form onsubmit="generatePdfReport(event)" class="space-y-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-400 mb-1.5">من تاريخ</label>
+                        <input type="date" id="reportStartDate" required class="w-full bg-dark-base border border-dark-border focus:border-amber-500 rounded-xl px-4 py-2.5 text-white text-sm outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-400 mb-1.5">إلى تاريخ</label>
+                        <input type="date" id="reportEndDate" required class="w-full bg-dark-base border border-dark-border focus:border-amber-500 rounded-xl px-4 py-2.5 text-white text-sm outline-none">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-400 mb-1.5">نوع العمليات</label>
+                        <select id="reportType" class="w-full bg-dark-base border border-dark-border focus:border-amber-500 rounded-xl px-4 py-2.5 text-white text-sm outline-none">
+                            <option value="all">كافة العمليات (دخل ومصاريف)</option>
+                            <option value="expense">المصاريف فقط</option>
+                            <option value="income">الدخل فقط</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-400 mb-1.5">الفئة</label>
+                        <select id="reportCategory" class="w-full bg-dark-base border border-dark-border focus:border-amber-500 rounded-xl px-4 py-2.5 text-white text-sm outline-none">
+                            <option value="all">جميع الفئات</option>
+                            <option value="سكن وفواتير">سكن وفواتير</option>
+                            <option value="طعام ومشتريات">طعام ومشتريات</option>
+                            <option value="سيارة ونقل">سيارة ونقل</option>
+                            <option value="ترفيه وتسوق">ترفيه وتسوق</option>
+                            <option value="صحة وعناية">صحة وعناية</option>
+                            <option value="راتب ودخل">راتب ودخل</option>
+                            <option value="استثمار وأرباح">استثمار وأرباح</option>
+                            <option value="أخرى">أخرى</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="pt-4 border-t border-gray-800 flex items-center justify-end gap-3">
+                    <button type="button" onclick="closeReportModal()" class="px-4 py-2.5 rounded-xl border border-dark-border text-gray-400 hover:text-white text-sm">
+                        إلغاء
+                    </button>
+                    <button type="submit" class="px-6 py-2.5 rounded-xl text-slate-950 font-extrabold gold-gradient hover:brightness-110 shadow-lg shadow-amber-500/20 text-sm flex items-center gap-2">
+                        <i class="fa-solid fa-download"></i>
+                        <span>تنزيل التقرير (PDF)</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Hidden Container Prepared Specially for Generating PDF / Printing -->
+    <div id="pdfPrintTemplate" class="hidden">
+        <!-- Rendered dynamically during report generation -->
+    </div>
+
+    <!-- Toast Notifications Container -->
+    <div id="toastContainer" class="fixed bottom-6 right-6 z-50 flex flex-col gap-3 pointer-events-none"></div>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // Data Structure & Storage Key
+        const STORAGE_KEY = 'yam_expenses_data_v1';
+        let transactions = [];
+        let currentFormType = 'expense';
+
+        // Category Configuration & Colors
+        const categoryMap = {
+            'سكن وفواتير': { icon: 'fa-house', color: '#F59E0B' },
+            'طعام ومشتريات': { icon: 'fa-utensils', color: '#10B981' },
+            'سيارة ونقل': { icon: 'fa-car', color: '#3B82F6' },
+            'ترفيه وتسوق': { icon: 'fa-bag-shopping', color: '#EC4899' },
+            'صحة وعناية': { icon: 'fa-heart-pulse', color: '#14B8A6' },
+            'راتب ودخل': { icon: 'fa-money-bill-wave', color: '#10B981' },
+            'استثمار وأرباح': { icon: 'fa-chart-line', color: '#8B5CF6' },
+            'أخرى': { icon: 'fa-ellipsis', color: '#64748B' }
+        };
+
+        const expenseCategories = ['سكن وفواتير', 'طعام ومشتريات', 'سيارة ونقل', 'ترفيه وتسوق', 'صحة وعناية', 'أخرى'];
+        const incomeCategories = ['راتب ودخل', 'استثمار وأرباح', 'أخرى'];
+
+        // Init App
+        window.addEventListener('DOMContentLoaded', () => {
+            loadTransactions();
+            document.getElementById('txDate').value = new Date().toISOString().split('T')[0];
+            updateCategoryOptions();
+            renderApp();
+        });
+
+        // Local Storage Handling
+        function loadTransactions() {
+            const stored = localStorage.getItem(STORAGE_KEY);
+            if (stored) {
+                try {
+                    transactions = JSON.parse(stored);
+                } catch (e) {
+                    transactions = [];
+                }
+            } else {
+                // Initialize with sample demo data
+                transactions = getDemoData();
+                saveTransactions();
+            }
+        }
+
+        function saveTransactions() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions));
+            renderApp();
+        }
+
+        // Demo Data Generation
+        function getDemoData() {
+            const today = new Date();
+            const formatDate = (offsetDays) => {
+                const d = new Date(today);
+                d.setDate(d.getDate() - offsetDays);
+                return d.toISOString().split('T')[0];
+            };
+
+            return [
+                { id: '1', type: 'income', amount: 15000, category: 'راتب ودخل', date: formatDate(10), description: 'الراتب الشهري الأساسي' },
+                { id: '2', type: 'expense', amount: 3500, category: 'سكن وفواتير', date: formatDate(8), description: 'إيجار شقة الشهر' },
+                { id: '3', type: 'expense', amount: 450, category: 'سكن وفواتير', date: formatDate(7), description: 'فاتورة الكهرباء والماء' },
+                { id: '4', type: 'expense', amount: 650, category: 'طعام ومشتريات', date: formatDate(5), description: 'شراء مقاضي السوبرماركت' },
+                { id: '5', type: 'expense', amount: 320, category: 'سيارة ونقل', date: formatDate(3), description: 'بنزين السيارة وصيانة سريعة' },
+                { id: '6', type: 'income', amount: 1200, category: 'استثمار وأرباح', date: formatDate(2), description: 'عائد أسهم ومحفظة' },
+                { id: '7', type: 'expense', amount: 280, category: 'ترفيه وتسوق', date: formatDate(1), description: 'عشاء مع الأصدقاء' }
+            ];
+        }
+
+        function loadDemoData() {
+            transactions = getDemoData();
+            saveTransactions();
+            showToast('تم تحميل البيانات التجريبية بنجاح', 'success');
+        }
+
+        // Main App Render
+        function renderApp() {
+            calculateSummary();
+            renderTransactions();
+            renderCharts();
+        }
+
+        // Summary Calculation & Status Updates
+        function calculateSummary() {
+            let totalIncome = 0;
+            let totalExpenses = 0;
+            const categoryTotals = {};
+
+            transactions.forEach(t => {
+                const amt = parseFloat(t.amount) || 0;
+                if (t.type === 'income') {
+                    totalIncome += amt;
+                } else {
+                    totalExpenses += amt;
+                    categoryTotals[t.category] = (categoryTotals[t.category] || 0) + amt;
+                }
+            });
+
+            const netBalance = totalIncome - totalExpenses;
+
+            // Render Totals
+            document.getElementById('totalIncome').innerText = totalIncome.toLocaleString('ar-SA', { minimumFractionDigits: 0 });
+            document.getElementById('totalExpenses').innerText = totalExpenses.toLocaleString('ar-SA', { minimumFractionDigits: 0 });
+            document.getElementById('netBalance').innerText = netBalance.toLocaleString('ar-SA', { minimumFractionDigits: 0 });
+
+            // Income ratio
+            const ratio = totalIncome > 0 ? Math.round(((totalIncome - totalExpenses) / totalIncome) * 100) : 0;
+            document.getElementById('incomePercentage').innerText = `${ratio}% متوفر`;
+
+            // Top Expense Category
+            let topCat = '-';
+            let maxAmt = 0;
+            for (const [cat, amt] of Object.entries(categoryTotals)) {
+                if (amt > maxAmt) {
+                    maxAmt = amt;
+                    topCat = cat;
+                }
+            }
+            document.getElementById('topCategoryDisplay').innerText = topCat;
+
+            // Balance Status & Styling
+            const statusEl = document.getElementById('financialStatus');
+            const iconBox = document.getElementById('balanceIconBox');
+
+            if (netBalance < 0) {
+                statusEl.innerText = 'عجز مالي';
+                statusEl.className = 'font-bold px-2 py-0.5 rounded text-rose-400 bg-rose-500/10';
+                iconBox.className = 'w-10 h-10 rounded-xl bg-rose-500/20 text-rose-400 flex items-center justify-center text-lg';
+            } else if (netBalance === 0) {
+                statusEl.innerText = 'متوازن';
+                statusEl.className = 'font-bold px-2 py-0.5 rounded text-amber-400 bg-amber-500/10';
+                iconBox.className = 'w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-lg';
+            } else {
+                statusEl.innerText = 'ممتاز ومستقر';
+                statusEl.className = 'font-bold px-2 py-0.5 rounded text-emerald-400 bg-emerald-500/10';
+                iconBox.className = 'w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-lg';
+            }
+        }
+
+        // Render Transaction Table List
+        function renderTransactions() {
+            const tableBody = document.getElementById('transactionTableBody');
+            const emptyState = document.getElementById('emptyState');
+            const searchVal = document.getElementById('searchInput').value.trim().toLowerCase();
+            const typeVal = document.getElementById('typeFilter').value;
+            const catVal = document.getElementById('categoryFilter').value;
+
+            // Filter logic
+            const filtered = transactions.filter(t => {
+                const matchSearch = t.description.toLowerCase().includes(searchVal);
+                const matchType = typeVal === 'all' || t.type === typeVal;
+                const matchCat = catVal === 'all' || t.category === catVal;
+                return matchSearch && matchType && matchCat;
+            });
+
+            // Sort by Date Descending
+            filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            tableBody.innerHTML = '';
+
+            if (filtered.length === 0) {
+                emptyState.classList.remove('hidden');
+                emptyState.classList.add('flex');
+            } else {
+                emptyState.classList.add('hidden');
+                emptyState.classList.remove('flex');
+
+                filtered.forEach(t => {
+                    const isExpense = t.type === 'expense';
+                    const catInfo = categoryMap[t.category] || { icon: 'fa-tag', color: '#64748B' };
+
+                    const tr = document.createElement('tr');
+                    tr.className = 'hover:bg-dark-hover/60 transition-all group';
+
+                    tr.innerHTML = `
+                        <td class="py-4 px-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl flex items-center justify-center text-sm shadow-sm" style="background-color: ${catInfo.color}15; color: ${catInfo.color}">
+                                    <i class="fa-solid ${catInfo.icon}"></i>
+                                </div>
+                                <div>
+                                    <div class="font-bold text-white">${t.category}</div>
+                                    <div class="text-xs text-gray-400 font-medium">${isExpense ? 'مصروف' : 'دخل'}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="py-4 px-4 text-xs font-semibold text-gray-300">
+                            ${t.date}
+                        </td>
+                        <td class="py-4 px-4 text-gray-200 font-medium">
+                            ${t.description}
+                        </td>
+                        <td class="py-4 px-4 font-bold ${isExpense ? 'text-rose-400' : 'text-emerald-400'}">
+                            ${isExpense ? '-' : '+'}${parseFloat(t.amount).toLocaleString('ar-SA')} ر.س
+                        </td>
+                        <td class="py-4 px-4 text-center">
+                            <div class="flex items-center justify-center gap-2 opacity-80 group-hover:opacity-100 transition-all">
+                                <button onclick="editTransaction('${t.id}')" class="w-8 h-8 rounded-lg bg-dark-base border border-dark-border hover:border-amber-500/50 text-gray-400 hover:text-amber-400 flex items-center justify-center transition-all">
+                                    <i class="fa-solid fa-pen-to-square text-xs"></i>
+                                </button>
+                                <button onclick="deleteTransaction('${t.id}')" class="w-8 h-8 rounded-lg bg-dark-base border border-dark-border hover:border-rose-500/50 text-gray-400 hover:text-rose-400 flex items-center justify-center transition-all">
+                                    <i class="fa-solid fa-trash-can text-xs"></i>
+                                </button>
+                            </div>
+                        </td>
+                    `;
+                    tableBody.appendChild(tr);
+                });
+            }
+        }
+
+        // Reset Filters
+        function resetFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('typeFilter').value = 'all';
+            document.getElementById('categoryFilter').value = 'all';
+            renderTransactions();
+        }
+
+        // PDF Report Modal Controls
+        function openReportModal() {
+            const modal = document.getElementById('reportModal');
+            const container = document.getElementById('reportModalContainer');
+
+            // Default dates (Start of month to today)
+            const now = new Date();
+            const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+            const today = now.toISOString().split('T')[0];
+
+            document.getElementById('reportStartDate').value = startOfMonth;
+            document.getElementById('reportEndDate').value = today;
+
+            modal.classList.remove('opacity-0', 'pointer-events-none');
+            container.classList.remove('scale-95');
+            container.classList.add('scale-100');
+        }
+
+        function closeReportModal() {
+            const modal = document.getElementById('reportModal');
+            const container = document.getElementById('reportModalContainer');
+
+            container.classList.remove('scale-100');
+            container.classList.add('scale-95');
+            modal.classList.add('opacity-0', 'pointer-events-none');
+        }
+
+        // High-Quality PDF Report Generation
+        function generatePdfReport(e) {
+            e.preventDefault();
+            
+            const startDate = document.getElementById('reportStartDate').value;
+            const endDate = document.getElementById('reportEndDate').value;
+            const typeFilter = document.getElementById('reportType').value;
+            const catFilter = document.getElementById('reportCategory').value;
+
+            // Filter transactions
+            const filtered = transactions.filter(t => {
+                const isAfterStart = !startDate || t.date >= startDate;
+                const isBeforeEnd = !endDate || t.date <= endDate;
+                const matchType = typeFilter === 'all' || t.type === typeFilter;
+                const matchCat = catFilter === 'all' || t.category === catFilter;
+                return isAfterStart && isBeforeEnd && matchType && matchCat;
+            }).sort((a, b) => new Date(a.date) - new Date(b.date));
+
+            if (filtered.length === 0) {
+                showToast('لا توجد عمليات تطابق الفلاتر المحددة للتقرير', 'error');
+                return;
+            }
+
+            let incomeSum = 0;
+            let expenseSum = 0;
+            filtered.forEach(t => {
+                if (t.type === 'income') incomeSum += parseFloat(t.amount);
+                else expenseSum += parseFloat(t.amount);
+            });
+            const net = incomeSum - expenseSum;
+
+            // Render PDF View Component
+            const template = document.getElementById('pdfPrintTemplate');
+            template.innerHTML = `
+                <div style="font-family: 'Cairo', sans-serif; direction: rtl; padding: 30px; background-color: #ffffff; color: #1e293b; max-width: 800px; margin: 0 auto;">
+                    <!-- Report Header -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f59e0b; padding-bottom: 20px; margin-bottom: 24px;">
+                        <div>
+                            <h1 style="font-size: 26px; font-weight: 800; color: #0f172a; margin: 0;">مصاريف يام</h1>
+                            <p style="font-size: 13px; color: #64748b; margin-top: 4px;">كشف حساب وتقييم مالي تفصيلي</p>
+                        </div>
+                        <div style="text-align: left;">
+                            <div style="font-size: 12px; color: #64748b;">تاريخ الإصدار</div>
+                            <div style="font-size: 14px; font-weight: 700; color: #0f172a;">${new Date().toLocaleDateString('ar-SA')}</div>
+                        </div>
+                    </div>
+
+                    <!-- Meta Information -->
+                    <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px 18px; margin-bottom: 24px; display: flex; justify-content: space-between; font-size: 13px;">
+                        <div><strong>الفترة الزمنية:</strong> من ${startDate || 'البداية'} إلى ${endDate || 'اليوم'}</div>
+                        <div><strong>نوع التقرير:</strong> ${typeFilter === 'all' ? 'جميع العمليات' : typeFilter === 'expense' ? 'المصاريف فقط' : 'الدخل فقط'}</div>
+                        <div><strong>إجمالي العمليات:</strong> ${filtered.length} عملية</div>
+                    </div>
+
+                    <!-- Summary Metrics Cards -->
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 24px;">
+                        <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 14px; border-radius: 12px; text-align: center;">
+                            <div style="font-size: 11px; color: #166534; font-weight: 700;">إجمالي الدخل</div>
+                            <div style="font-size: 20px; font-weight: 800; color: #15803d; margin-top: 4px;">${incomeSum.toLocaleString('ar-SA')} ر.س</div>
+                        </div>
+                        <div style="background: #fef2f2; border: 1px solid #fecaca; padding: 14px; border-radius: 12px; text-align: center;">
+                            <div style="font-size: 11px; color: #991b1b; font-weight: 700;">إجمالي المصاريف</div>
+                            <div style="font-size: 20px; font-weight: 800; color: #b91c1c; margin-top: 4px;">${expenseSum.toLocaleString('ar-SA')} ر.س</div>
+                        </div>
+                        <div style="background: #fffbeb; border: 1px solid #fde68a; padding: 14px; border-radius: 12px; text-align: center;">
+                            <div style="font-size: 11px; color: #92400e; font-weight: 700;">الصافي المتبقي</div>
+                            <div style="font-size: 20px; font-weight: 800; color: #d97706; margin-top: 4px;">${net.toLocaleString('ar-SA')} ر.س</div>
+                        </div>
+                    </div>
+
+                    <!-- Detailed Table -->
+                    <table style="width: 100%; border-collapse: collapse; font-size: 12px; text-align: right; margin-bottom: 30px;">
+                        <thead>
+                            <tr style="background-color: #0f172a; color: #ffffff;">
+                                <th style="padding: 10px 12px; border-radius: 0 8px 8px 0;">#</th>
+                                <th style="padding: 10px 12px;">التاريخ</th>
+                                <th style="padding: 10px 12px;">الفئة</th>
+                                <th style="padding: 10px 12px;">الوصف</th>
+                                <th style="padding: 10px 12px;">النوع</th>
+                                <th style="padding: 10px 12px; border-radius: 8px 0 0 8px;">المبلغ</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${filtered.map((t, idx) => `
+                                <tr style="border-bottom: 1px solid #e2e8f0; background-color: ${idx % 2 === 0 ? '#ffffff' : '#f8fafc'};">
+                                    <td style="padding: 10px 12px; color: #64748b;">${idx + 1}</td>
+                                    <td style="padding: 10px 12px; font-weight: 600;">${t.date}</td>
+                                    <td style="padding: 10px 12px;">${t.category}</td>
+                                    <td style="padding: 10px 12px;">${t.description}</td>
+                                    <td style="padding: 10px 12px; font-weight: 700; color: ${t.type === 'income' ? '#16a34a' : '#dc2626'};">${t.type === 'income' ? 'دخل' : 'مصروف'}</td>
+                                    <td style="padding: 10px 12px; font-weight: 800; color: ${t.type === 'income' ? '#16a34a' : '#dc2626'};">${parseFloat(t.amount).toLocaleString('ar-SA')} ر.س</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+
+                    <!-- Report Footer -->
+                    <div style="border-top: 1px solid #e2e8f0; pt: 16px; display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: #94a3b8;">
+                        <div>تم إصدار التقرير بواسطة تطبيق <strong>مصاريف يام</strong> © ${new Date().getFullYear()}</div>
+                        <div>توقيع الاعتماد: _________________</div>
+                    </div>
+                </div>
+            `;
+
+            // HTML to PDF configuration
+            const opt = {
+                margin:       10,
+                filename:     `كشف_حساب_مصاريف_يام_${startDate}_إلى_${endDate}.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2 },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            showToast('جاري إنشاء تقرير PDF...', 'success');
+            
+            // Execute generation using html2pdf
+            html2pdf().set(opt).from(template.firstElementChild).save().then(() => {
+                closeReportModal();
+                showToast('تم إخراج التقرير وتنزيله بنجاح!', 'success');
+            }).catch(() => {
+                showToast('حدث خطأ أثناء إخراج PDF', 'error');
+            });
+        }
+
+        // Form & Modal Controls
+        function openModal(editId = null) {
+            const modal = document.getElementById('transactionModal');
+            const modalContainer = document.getElementById('modalContainer');
+            const modalTitle = document.getElementById('modalTitle');
+            const submitBtnText = document.getElementById('submitBtnText');
+
+            if (editId) {
+                const tx = transactions.find(t => t.id === editId);
+                if (!tx) return;
+
+                document.getElementById('editId').value = tx.id;
+                document.getElementById('txAmount').value = tx.amount;
+                document.getElementById('txDate').value = tx.date;
+                document.getElementById('txDescription').value = tx.description;
+                setFormType(tx.type);
+                document.getElementById('txCategory').value = tx.category;
+
+                modalTitle.innerHTML = `<i class="fa-solid fa-pen-to-square text-amber-500"></i> تعديل عملية`;
+                submitBtnText.innerText = 'تحديث العملية';
+            } else {
+                document.getElementById('transactionForm').reset();
+                document.getElementById('editId').value = '';
+                document.getElementById('txDate').value = new Date().toISOString().split('T')[0];
+                setFormType('expense');
+
+                modalTitle.innerHTML = `<i class="fa-solid fa-circle-plus text-amber-500"></i> إضافة عملية جديدة`;
+                submitBtnText.innerText = 'حفظ العملية';
+            }
+
+            modal.classList.remove('opacity-0', 'pointer-events-none');
+            modalContainer.classList.remove('scale-95');
+            modalContainer.classList.add('scale-100');
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('transactionModal');
+            const modalContainer = document.getElementById('modalContainer');
+
+            modalContainer.classList.remove('scale-100');
+            modalContainer.classList.add('scale-95');
+            modal.classList.add('opacity-0', 'pointer-events-none');
+        }
+
+        function setFormType(type) {
+            currentFormType = type;
+            const btnExpense = document.getElementById('btnTypeExpense');
+            const btnIncome = document.getElementById('btnTypeIncome');
+
+            if (type === 'expense') {
+                btnExpense.className = 'py-2.5 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-2 bg-rose-500 text-white shadow-md';
+                btnIncome.className = 'py-2.5 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-2 text-gray-400 hover:text-white';
+            } else {
+                btnIncome.className = 'py-2.5 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-2 bg-emerald-500 text-white shadow-md';
+                btnExpense.className = 'py-2.5 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-2 text-gray-400 hover:text-white';
+            }
+
+            updateCategoryOptions();
+        }
+
+        function updateCategoryOptions() {
+            const select = document.getElementById('txCategory');
+            select.innerHTML = '';
+            const cats = currentFormType === 'expense' ? expenseCategories : incomeCategories;
+
+            cats.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c;
+                opt.textContent = c;
+                select.appendChild(opt);
+            });
+        }
+
+        function handleFormSubmit(e) {
+            e.preventDefault();
+
+            const editId = document.getElementById('editId').value;
+            const amount = parseFloat(document.getElementById('txAmount').value);
+            const category = document.getElementById('txCategory').value;
+            const date = document.getElementById('txDate').value;
+            const description = document.getElementById('txDescription').value.trim();
+
+            if (!amount || amount <= 0) {
+                showToast('يرجى إدخال مبلغ صحيح', 'error');
+                return;
+            }
+
+            if (editId) {
+                // Update
+                const index = transactions.findIndex(t => t.id === editId);
+                if (index !== -1) {
+                    transactions[index] = {
+                        id: editId,
+                        type: currentFormType,
+                        amount,
+                        category,
+                        date,
+                        description
+                    };
+                    showToast('تم تعديل العملية بنجاح', 'success');
+                }
+            } else {
+                // Add New
+                const newTx = {
+                    id: Date.now().toString(),
+                    type: currentFormType,
+                    amount,
+                    category,
+                    date,
+                    description
+                };
+                transactions.unshift(newTx);
+                showToast('تمت إضافة العملية بنجاح', 'success');
+            }
+
+            saveTransactions();
+            closeModal();
+        }
+
+        function editTransaction(id) {
+            openModal(id);
+        }
+
+        function deleteTransaction(id) {
+            if (confirm('هل أنت تأكد من رغبتك في حذف هذه العملية؟')) {
+                transactions = transactions.filter(t => t.id !== id);
+                saveTransactions();
+                showToast('تم حذف العملية بنجاح', 'success');
+            }
+        }
+
+        // Charts Canvas & Rendering Logic
+        function renderCharts() {
+            renderDonutChart();
+            renderBarChart();
+        }
+
+        function renderDonutChart() {
+            const canvas = document.getElementById('categoryChart');
+            const ctx = canvas.getContext('2d');
+            const legendContainer = document.getElementById('chartLegend');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Expense Category Totals
+            const totals = {};
+            let totalExpenseSum = 0;
+
+            transactions.filter(t => t.type === 'expense').forEach(t => {
+                const amt = parseFloat(t.amount) || 0;
+                totals[t.category] = (totals[t.category] || 0) + amt;
+                totalExpenseSum += amt;
+            });
+
+            document.getElementById('chartTotalAmount').innerText = `${totalExpenseSum.toLocaleString('ar-SA')} ر.س`;
+            legendContainer.innerHTML = '';
+
+            const categories = Object.keys(totals);
+
+            if (categories.length === 0 || totalExpenseSum === 0) {
+                // Render Empty Donut Circle
+                ctx.beginPath();
+                ctx.arc(140, 140, 100, 0, 2 * Math.PI);
+                ctx.strokeStyle = '#1F293D';
+                ctx.lineWidth = 30;
+                ctx.stroke();
+                return;
+            }
+
+            let startAngle = -Math.PI / 2;
+
+            categories.forEach(cat => {
+                const amt = totals[cat];
+                const sliceAngle = (amt / totalExpenseSum) * 2 * Math.PI;
+                const color = categoryMap[cat]?.color || '#64748B';
+
+                // Draw Slice
+                ctx.beginPath();
+                ctx.arc(140, 140, 100, startAngle, startAngle + sliceAngle);
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 28;
+                ctx.stroke();
+
+                startAngle += sliceAngle;
+
+                // Legend
+                const perc = Math.round((amt / totalExpenseSum) * 100);
+                const item = document.createElement('div');
+                item.className = 'flex items-center justify-between p-1.5 bg-dark-base/50 rounded-lg border border-dark-border';
+                item.innerHTML = `
+                    <div class="flex items-center gap-1.5 overflow-hidden">
+                        <span class="w-2.5 h-2.5 rounded-full flex-shrink-0" style="background-color: ${color}"></span>
+                        <span class="text-gray-300 truncate">${cat}</span>
+                    </div>
+                    <span class="font-bold text-white">${perc}%</span>
+                `;
+                legendContainer.appendChild(item);
+            });
+        }
+
+        function renderBarChart() {
+            const container = document.getElementById('barChartContainer');
+            container.innerHTML = '';
+
+            // Group data by last 7 unique dates
+            const daysMap = {};
+            const today = new Date();
+
+            for (let i = 6; i >= 0; i--) {
+                const d = new Date(today);
+                d.setDate(d.getDate() - i);
+                const dateStr = d.toISOString().split('T')[0];
+                daysMap[dateStr] = { income: 0, expense: 0, label: `${d.getDate()}/${d.getMonth() + 1}` };
+            }
+
+            transactions.forEach(t => {
+                if (daysMap[t.date]) {
+                    const amt = parseFloat(t.amount) || 0;
+                    if (t.type === 'income') daysMap[t.date].income += amt;
+                    else daysMap[t.date].expense += amt;
+                }
+            });
+
+            // Find Max Value for Scale
+            let maxVal = 1000;
+            Object.values(daysMap).forEach(day => {
+                if (day.income > maxVal) maxVal = day.income;
+                if (day.expense > maxVal) maxVal = day.expense;
+            });
+
+            // Create Bars
+            Object.values(daysMap).forEach(day => {
+                const incHeight = Math.max(8, Math.round((day.income / maxVal) * 180));
+                const expHeight = Math.max(8, Math.round((day.expense / maxVal) * 180));
+
+                const barGroup = document.createElement('div');
+                barGroup.className = 'flex flex-col items-center gap-2 h-full justify-end flex-1';
+
+                barGroup.innerHTML = `
+                    <div class="flex items-end gap-1 h-[190px]">
+                        <!-- Income Bar -->
+                        <div class="w-3 sm:w-4 bg-emerald-500 rounded-t-md transition-all relative group" style="height: ${incHeight}px">
+                            <div class="absolute -top-8 right-1/2 translate-x-1/2 bg-dark-card border border-dark-border text-white text-[10px] px-2 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-all pointer-events-none whitespace-nowrap z-10">
+                                +${day.income}
+                            </div>
+                        </div>
+                        <!-- Expense Bar -->
+                        <div class="w-3 sm:w-4 bg-rose-500 rounded-t-md transition-all relative group" style="height: ${expHeight}px">
+                            <div class="absolute -top-8 right-1/2 translate-x-1/2 bg-dark-card border border-dark-border text-white text-[10px] px-2 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-all pointer-events-none whitespace-nowrap z-10">
+                                -${day.expense}
+                            </div>
+                        </div>
+                    </div>
+                    <span class="text-[11px] font-bold text-gray-400">${day.label}</span>
+                `;
+
+                container.appendChild(barGroup);
+            });
+        }
+
+        // Import & Export Backup Operations
+        function exportData() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(transactions, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", `مصاريف_يام_نسخة_احتياطية_${new Date().toISOString().split('T')[0]}.json`);
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+            showToast('تم تصدير النسخة الاحتياطية بنجاح', 'success');
+        }
+
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    if (Array.isArray(imported)) {
+                        transactions = imported;
+                        saveTransactions();
+                        showToast('تم استيراد البيانات بنجاح', 'success');
+                    } else {
+                        showToast('ملف غير صالح', 'error');
+                    }
+                } catch (err) {
+                    showToast('خطأ في قراءة الملف', 'error');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // Toast Messages Component
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+
+            const isSuccess = type === 'success';
+            const icon = isSuccess ? 'fa-circle-check text-emerald-400' : 'fa-triangle-exclamation text-rose-400';
+            const borderColor = isSuccess ? 'border-emerald-500/30' : 'border-rose-500/30';
+
+            toast.className = `glass-panel ${borderColor} px-4 py-3 rounded-2xl text-sm font-bold text-white flex items-center gap-3 shadow-xl transition-all duration-300 transform translate-y-4 opacity-0 pointer-events-auto`;
+            toast.innerHTML = `
+                <i class="fa-solid ${icon} text-lg"></i>
+                <span>${message}</span>
+            `;
+
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-4', 'opacity-0');
+            }, 10);
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
