@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مصاريف يام - إدارة المصاريف الشخصية</title>
+    <title>مصاريف يام - إدارة المصاريف الشخصية والمستخدمين</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts: Cairo -->
@@ -12,7 +12,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Chart.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- html2pdf CDN for high-quality PDF generation -->
+    <!-- html2pdf CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
     <script>
@@ -47,7 +47,6 @@
             color: #E2E8F0;
         }
 
-        /* Glassmorphism Effect */
         .glass-panel {
             background: rgba(19, 26, 39, 0.75);
             backdrop-filter: blur(16px);
@@ -69,7 +68,6 @@
             -webkit-text-fill-color: transparent;
         }
 
-        /* Scrollbar styles */
         ::-webkit-scrollbar {
             width: 6px;
             height: 6px;
@@ -88,234 +86,293 @@
 </head>
 <body class="min-h-screen pb-12 antialiased selection:bg-amber-500/30 selection:text-amber-400">
 
-    <!-- Top Navigation Header -->
-    <header class="sticky top-0 z-40 glass-panel border-b border-gray-800/80 mb-8">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <div class="w-12 h-12 rounded-2xl gold-gradient flex items-center justify-center text-slate-950 font-black text-2xl shadow-lg shadow-amber-500/20">
-                    <i class="fa-solid font-black fa-wallet"></i>
+    <!-- ==================== Auth Screen (Login) ==================== -->
+    <div id="authContainer" class="fixed inset-0 z-50 flex items-center justify-center bg-dark-base px-4">
+        <div class="glass-panel border border-amber-500/30 gold-glow rounded-3xl w-full max-w-md p-8 shadow-2xl relative">
+            <div class="text-center mb-8">
+                <div class="w-16 h-16 rounded-2xl gold-gradient flex items-center justify-center text-slate-950 font-black text-3xl shadow-lg shadow-amber-500/20 mx-auto mb-4">
+                    <i class="fa-solid fa-wallet"></i>
                 </div>
-                <div>
-                    <h1 class="text-2xl font-black tracking-tight gold-text-gradient">مصاريف يام</h1>
-                    <p class="text-xs text-gray-400">إدارة المصاريف والمالية الشخصية الذكية</p>
-                </div>
+                <h1 class="text-3xl font-black gold-text-gradient mb-1">مصاريف يام</h1>
+                <p class="text-xs text-gray-400">نظام إدارة المصاريف المتعدد للمستخدمين</p>
             </div>
 
-            <div class="flex items-center gap-2 sm:gap-3">
-                <button onclick="openReportModal()" class="px-3.5 py-2 text-xs sm:text-sm font-bold text-slate-950 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 rounded-xl shadow-lg shadow-amber-500/20 transition-all flex items-center gap-2">
-                    <i class="fa-solid fa-file-pdf"></i>
-                    <span>توليد تقرير PDF</span>
+            <form onsubmit="handleLogin(event)" class="space-y-5">
+                <div>
+                    <label class="block text-xs font-bold text-gray-300 mb-2">اسم المستخدم</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-user absolute right-4 top-3.5 text-gray-500 text-sm"></i>
+                        <input type="text" id="loginUsername" required placeholder="أدخل اسم المستخدم" class="w-full pr-11 pl-4 py-3 bg-dark-base border border-dark-border focus:border-amber-500 text-sm rounded-xl text-white outline-none transition-all">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-gray-300 mb-2">كلمة المرور</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-lock absolute right-4 top-3.5 text-gray-500 text-sm"></i>
+                        <input type="password" id="loginPassword" required placeholder="أدخل كلمة المرور" class="w-full pr-11 pl-4 py-3 bg-dark-base border border-dark-border focus:border-amber-500 text-sm rounded-xl text-white outline-none transition-all">
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full py-3.5 rounded-xl font-extrabold text-slate-950 gold-gradient hover:brightness-110 shadow-lg shadow-amber-500/25 transition-all text-sm flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-right-to-bracket"></i>
+                    <span>تسجيل الدخول</span>
                 </button>
-                <button onclick="loadDemoData()" class="px-3 py-2 text-xs sm:text-sm font-medium text-amber-400 hover:text-amber-300 bg-amber-500/10 hover:bg-amber-500/20 rounded-xl border border-amber-500/20 transition-all flex items-center gap-2">
-                    <i class="fa-solid fa-wand-magic-sparkles"></i>
-                    <span class="hidden sm:inline">بيانات تجريبية</span>
-                </button>
-                <button onclick="exportData()" class="p-2.5 sm:px-3.5 sm:py-2 text-xs sm:text-sm font-medium text-gray-300 hover:text-white bg-dark-card border border-dark-border hover:border-gray-600 rounded-xl transition-all flex items-center gap-2">
-                    <i class="fa-solid fa-file-export text-amber-500"></i>
-                    <span class="hidden sm:inline">تصدير</span>
-                </button>
-                <label for="importFile" class="p-2.5 sm:px-3.5 sm:py-2 text-xs sm:text-sm font-medium text-gray-300 hover:text-white bg-dark-card border border-dark-border hover:border-gray-600 rounded-xl cursor-pointer transition-all flex items-center gap-2">
-                    <i class="fa-solid fa-file-import text-amber-500"></i>
-                    <span class="hidden sm:inline">استيراد</span>
-                </label>
-                <input type="file" id="importFile" class="hidden" accept=".json" onchange="importData(event)">
-                <button onclick="openModal()" class="px-4 py-2.5 text-xs sm:text-sm font-bold text-slate-950 gold-gradient hover:brightness-110 rounded-xl shadow-lg shadow-amber-500/25 transition-all flex items-center gap-2">
-                    <i class="fa-solid fa-plus text-sm"></i>
-                    <span>إضافة عملية</span>
-                </button>
+            </form>
+
+            <div class="mt-6 pt-4 border-t border-gray-800 text-center text-xs text-gray-500">
+                الحساب الافتراضي للمدير: <span class="text-amber-400 font-bold">admin</span> / كلمة المرور: <span class="text-amber-400 font-bold">admin123</span>
             </div>
         </div>
-    </header>
+    </div>
 
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
-
-        <!-- Financial Summary Cards -->
-        <section class="grid grid-cols-1 md:grid-cols-3 gap-5">
-            <!-- Total Income Card -->
-            <div class="glass-panel p-6 rounded-3xl relative overflow-hidden group hover:border-emerald-500/40 transition-all">
-                <div class="absolute -left-4 -bottom-4 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-all"></div>
-                <div class="flex items-center justify-between mb-4">
-                    <span class="text-sm font-semibold text-gray-400">إجمالي الدخل</span>
-                    <div class="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-lg">
-                        <i class="fa-solid fa-arrow-down-left"></i>
+    <!-- Main Dashboard Container -->
+    <div id="appContainer" class="hidden">
+        <!-- Top Navigation Header -->
+        <header class="sticky top-0 z-40 glass-panel border-b border-gray-800/80 mb-8">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 rounded-2xl gold-gradient flex items-center justify-center text-slate-950 font-black text-2xl shadow-lg shadow-amber-500/20">
+                        <i class="fa-solid font-black fa-wallet"></i>
                     </div>
-                </div>
-                <div class="flex items-baseline gap-2">
-                    <h3 id="totalIncome" class="text-3xl font-extrabold text-white tracking-tight">0</h3>
-                    <span class="text-sm font-bold text-emerald-400">ر.س</span>
-                </div>
-                <div class="mt-4 pt-3 border-t border-gray-800/60 flex items-center justify-between text-xs text-gray-400">
-                    <span>نسبة التدفق الإيجابي</span>
-                    <span id="incomePercentage" class="font-bold text-emerald-400">100%</span>
-                </div>
-            </div>
-
-            <!-- Total Expenses Card -->
-            <div class="glass-panel p-6 rounded-3xl relative overflow-hidden group hover:border-rose-500/40 transition-all">
-                <div class="absolute -left-4 -bottom-4 w-24 h-24 bg-rose-500/10 rounded-full blur-2xl group-hover:bg-rose-500/20 transition-all"></div>
-                <div class="flex items-center justify-between mb-4">
-                    <span class="text-sm font-semibold text-gray-400">إجمالي المصاريف</span>
-                    <div class="w-10 h-10 rounded-xl bg-rose-500/10 text-rose-400 flex items-center justify-center text-lg">
-                        <i class="fa-solid fa-arrow-up-right"></i>
-                    </div>
-                </div>
-                <div class="flex items-baseline gap-2">
-                    <h3 id="totalExpenses" class="text-3xl font-extrabold text-white tracking-tight">0</h3>
-                    <span class="text-sm font-bold text-rose-400">ر.س</span>
-                </div>
-                <div class="mt-4 pt-3 border-t border-gray-800/60 flex items-center justify-between text-xs text-gray-400">
-                    <span>أعلى فئة صرف</span>
-                    <span id="topCategoryDisplay" class="font-bold text-amber-400">-</span>
-                </div>
-            </div>
-
-            <!-- Current Balance Card -->
-            <div class="glass-panel p-6 rounded-3xl relative overflow-hidden group border-amber-500/30 gold-glow">
-                <div class="absolute -left-4 -bottom-4 w-24 h-24 bg-amber-500/10 rounded-full blur-2xl group-hover:bg-amber-500/20 transition-all"></div>
-                <div class="flex items-center justify-between mb-4">
-                    <span class="text-sm font-semibold text-gray-300">الرصيد المتبقي</span>
-                    <div id="balanceIconBox" class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-lg">
-                        <i class="fa-solid fa-scale-balanced"></i>
-                    </div>
-                </div>
-                <div class="flex items-baseline gap-2">
-                    <h3 id="netBalance" class="text-3xl font-extrabold text-white tracking-tight">0</h3>
-                    <span class="text-sm font-bold text-amber-400">ر.س</span>
-                </div>
-                <div class="mt-4 pt-3 border-t border-gray-800/60 flex items-center justify-between text-xs">
-                    <span class="text-gray-400">الحالة المالية</span>
-                    <span id="financialStatus" class="font-bold px-2 py-0.5 rounded text-amber-400 bg-amber-500/10">مستقر</span>
-                </div>
-            </div>
-        </section>
-
-        <!-- Visual Analytics Section -->
-        <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <!-- Pie/Donut Chart Container -->
-            <div class="glass-panel p-6 rounded-3xl flex flex-col justify-between">
-                <div class="flex items-center justify-between mb-6">
                     <div>
-                        <h2 class="text-lg font-bold text-white flex items-center gap-2">
-                            <i class="fa-solid fa-chart-pie text-amber-500"></i>
-                            توزيع المصاريف حسب الفئات
-                        </h2>
-                        <p class="text-xs text-gray-400 mt-0.5">تفاصيل الإنفاق لكافة الأقسام</p>
+                        <h1 class="text-2xl font-black tracking-tight gold-text-gradient">مصاريف يام</h1>
+                        <div class="flex items-center gap-2">
+                            <span id="userBadge" class="text-xs px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20 font-bold">مستخدم</span>
+                            <span id="currentUserDisplay" class="text-xs text-gray-400">أهلاً بك</span>
+                        </div>
                     </div>
                 </div>
-                <div class="relative flex items-center justify-center min-h-[260px]">
-                    <canvas id="categoryChart" width="280" height="280" class="max-w-[260px] max-h-[260px]"></canvas>
-                    <div id="chartCenterText" class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center">
-                        <span class="text-xs text-gray-400">المجموع</span>
-                        <span id="chartTotalAmount" class="text-base font-extrabold text-white">0 ر.س</span>
-                    </div>
-                </div>
-                <div id="chartLegend" class="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-6 pt-4 border-t border-gray-800/60 text-xs">
-                    <!-- Dynamic Legend Inserted Here -->
-                </div>
-            </div>
 
-            <!-- Bar Chart Container -->
-            <div class="glass-panel p-6 rounded-3xl flex flex-col justify-between">
-                <div class="flex items-center justify-between mb-6">
-                    <div>
-                        <h2 class="text-lg font-bold text-white flex items-center gap-2">
-                            <i class="fa-solid fa-chart-column text-amber-500"></i>
-                            تحليل التدفق المالي الأسبوعي
-                        </h2>
-                        <p class="text-xs text-gray-400 mt-0.5">مقارنة بين الدخل والمصاريف لأحدث الأيام</p>
-                    </div>
-                </div>
-                <div class="relative w-full h-[260px] flex items-end justify-between px-2 pt-8 border-b border-gray-800/80" id="barChartContainer">
-                    <!-- Dynamic Bars Rendered Here -->
-                </div>
-                <div class="flex justify-center gap-6 mt-6 pt-4 border-t border-gray-800/60 text-xs font-semibold">
-                    <div class="flex items-center gap-2">
-                        <span class="w-3 h-3 rounded-full bg-emerald-500 inline-block"></span>
-                        <span class="text-gray-300">الدخل</span>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <span class="w-3 h-3 rounded-full bg-rose-500 inline-block"></span>
-                        <span class="text-gray-300">المصاريف</span>
-                    </div>
-                </div>
-            </div>
-        </section>
+                <div class="flex items-center gap-2 sm:gap-3 flex-wrap justify-end">
+                    <!-- Admin Panel Button (Shown to Admin only) -->
+                    <button id="adminBtn" onclick="openAdminModal()" class="hidden px-3.5 py-2 text-xs sm:text-sm font-bold text-amber-400 hover:text-amber-300 bg-amber-500/10 hover:bg-amber-500/20 rounded-xl border border-amber-500/30 transition-all flex items-center gap-2">
+                        <i class="fa-solid fa-users-gear text-amber-500"></i>
+                        <span>لوحة المدير العام</span>
+                    </button>
 
-        <!-- Filter & Search Controls + Transactions Table -->
-        <section class="glass-panel rounded-3xl p-6 space-y-6">
-            <!-- Header and Filter Bar -->
-            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-6 border-b border-gray-800/80">
-                <div>
-                    <h2 class="text-xl font-bold text-white flex items-center gap-2.5">
-                        <i class="fa-solid fa-list-check text-amber-500"></i>
-                        سجل العمليات المالية
-                    </h2>
-                    <p class="text-xs text-gray-400 mt-1">تصفية، ابحث، وإدارة كامل العمليات بسهولة</p>
-                </div>
+                    <button onclick="openReportModal()" class="px-3.5 py-2 text-xs sm:text-sm font-bold text-slate-950 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 rounded-xl shadow-lg shadow-amber-500/20 transition-all flex items-center gap-2">
+                        <i class="fa-solid fa-file-pdf"></i>
+                        <span class="hidden sm:inline">تقرير PDF</span>
+                    </button>
+                    <button onclick="loadDemoData()" class="p-2.5 sm:px-3 sm:py-2 text-xs sm:text-sm font-medium text-amber-400 hover:text-amber-300 bg-amber-500/10 hover:bg-amber-500/20 rounded-xl border border-amber-500/20 transition-all flex items-center gap-2">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                        <span class="hidden sm:inline">تجريبي</span>
+                    </button>
+                    <button onclick="exportData()" class="p-2.5 sm:px-3.5 sm:py-2 text-xs sm:text-sm font-medium text-gray-300 hover:text-white bg-dark-card border border-dark-border hover:border-gray-600 rounded-xl transition-all flex items-center gap-2">
+                        <i class="fa-solid fa-file-export text-amber-500"></i>
+                        <span class="hidden sm:inline">تصدير</span>
+                    </button>
+                    <label for="importFile" class="p-2.5 sm:px-3.5 sm:py-2 text-xs sm:text-sm font-medium text-gray-300 hover:text-white bg-dark-card border border-dark-border hover:border-gray-600 rounded-xl cursor-pointer transition-all flex items-center gap-2">
+                        <i class="fa-solid fa-file-import text-amber-500"></i>
+                        <span class="hidden sm:inline">استيراد</span>
+                    </label>
+                    <input type="file" id="importFile" class="hidden" accept=".json" onchange="importData(event)">
+                    
+                    <button onclick="openModal()" class="px-3.5 py-2 text-xs sm:text-sm font-bold text-slate-950 gold-gradient hover:brightness-110 rounded-xl shadow-lg shadow-amber-500/25 transition-all flex items-center gap-2">
+                        <i class="fa-solid fa-plus text-sm"></i>
+                        <span>إضافة عملية</span>
+                    </button>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
-                    <!-- Search input -->
-                    <div class="relative">
-                        <i class="fa-solid fa-magnifying-glass absolute right-3.5 top-3.5 text-gray-500 text-sm"></i>
-                        <input type="text" id="searchInput" oninput="renderTransactions()" placeholder="بحث في الوصف..." class="w-full pr-10 pl-3 py-2 bg-dark-base border border-dark-border focus:border-amber-500 text-sm rounded-xl text-white outline-none transition-all placeholder:text-gray-600">
-                    </div>
-
-                    <!-- Type Filter -->
-                    <select id="typeFilter" onchange="renderTransactions()" class="bg-dark-base border border-dark-border focus:border-amber-500 text-sm rounded-xl px-3 py-2 text-white outline-none transition-all">
-                        <option value="all">كافة العمليات (دخل ومصاريف)</option>
-                        <option value="expense">المصاريف فقط</option>
-                        <option value="income">الدخل فقط</option>
-                    </select>
-
-                    <!-- Category Filter -->
-                    <select id="categoryFilter" onchange="renderTransactions()" class="bg-dark-base border border-dark-border focus:border-amber-500 text-sm rounded-xl px-3 py-2 text-white outline-none transition-all">
-                        <option value="all">كافة الفئات</option>
-                        <option value="سكن وفواتير">سكن وفواتير</option>
-                        <option value="طعام ومشتريات">طعام ومشتريات</option>
-                        <option value="سيارة ونقل">سيارة ونقل</option>
-                        <option value="ترفيه وتسوق">ترفيه وتسوق</option>
-                        <option value="صحة وعناية">صحة وعناية</option>
-                        <option value="راتب ودخل">راتب ودخل</option>
-                        <option value="استثمار وأرباح">استثمار وأرباح</option>
-                        <option value="أخرى">أخرى</option>
-                    </select>
-
-                    <!-- Reset Filter Button -->
-                    <button onclick="resetFilters()" class="px-3 py-2 bg-dark-base hover:bg-dark-border border border-dark-border text-gray-300 hover:text-white rounded-xl text-sm transition-all flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-rotate-left text-xs"></i>
-                        إعادة ضبط
+                    <button onclick="handleLogout()" class="p-2.5 sm:px-3.5 sm:py-2 text-xs sm:text-sm font-semibold text-rose-400 hover:text-rose-300 bg-rose-500/10 hover:bg-rose-500/20 rounded-xl border border-rose-500/20 transition-all flex items-center gap-2" title="تسجيل الخروج">
+                        <i class="fa-solid fa-power-off"></i>
+                        <span class="hidden md:inline">خروج</span>
                     </button>
                 </div>
             </div>
+        </header>
 
-            <!-- Transactions Table List -->
-            <div class="overflow-x-auto">
-                <table class="w-full text-right border-collapse">
-                    <thead>
-                        <tr class="text-xs font-bold text-gray-400 border-b border-gray-800/80 bg-dark-base/40">
-                            <th class="py-3.5 px-4 rounded-r-xl">النوع والفئة</th>
-                            <th class="py-3.5 px-4">التاريخ</th>
-                            <th class="py-3.5 px-4">الوصف / ملاحظات</th>
-                            <th class="py-3.5 px-4">المبلغ</th>
-                            <th class="py-3.5 px-4 rounded-l-xl text-center">إجراءات</th>
-                        </tr>
-                    </thead>
-                    <tbody id="transactionTableBody" class="divide-y divide-gray-800/50 text-sm">
-                        <!-- Dynamic Rows -->
-                    </tbody>
-                </table>
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
 
-                <!-- Empty State -->
-                <div id="emptyState" class="hidden flex-col items-center justify-center py-12 text-center">
-                    <div class="w-16 h-16 rounded-full bg-dark-base flex items-center justify-center text-gray-600 text-2xl mb-3 border border-dark-border">
-                        <i class="fa-solid fa-receipt"></i>
+            <!-- Financial Summary Cards -->
+            <section class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                <!-- Total Income Card -->
+                <div class="glass-panel p-6 rounded-3xl relative overflow-hidden group hover:border-emerald-500/40 transition-all">
+                    <div class="absolute -left-4 -bottom-4 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-all"></div>
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="text-sm font-semibold text-gray-400">إجمالي الدخل</span>
+                        <div class="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-lg">
+                            <i class="fa-solid fa-arrow-down-left"></i>
+                        </div>
                     </div>
-                    <h4 class="text-base font-bold text-gray-300">لا توجد عمليات مسجلة</h4>
-                    <p class="text-xs text-gray-500 mt-1 max-w-sm">قم بإضافة عملية جديدة أو غير إعدادات التصفية للبحث عن نتائج أخرى.</p>
+                    <div class="flex items-baseline gap-2">
+                        <h3 id="totalIncome" class="text-3xl font-extrabold text-white tracking-tight">0</h3>
+                        <span class="text-sm font-bold text-emerald-400">ر.س</span>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-gray-800/60 flex items-center justify-between text-xs text-gray-400">
+                        <span>نسبة التدفق الإيجابي</span>
+                        <span id="incomePercentage" class="font-bold text-emerald-400">100%</span>
+                    </div>
                 </div>
-            </div>
-        </section>
-    </main>
+
+                <!-- Total Expenses Card -->
+                <div class="glass-panel p-6 rounded-3xl relative overflow-hidden group hover:border-rose-500/40 transition-all">
+                    <div class="absolute -left-4 -bottom-4 w-24 h-24 bg-rose-500/10 rounded-full blur-2xl group-hover:bg-rose-500/20 transition-all"></div>
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="text-sm font-semibold text-gray-400">إجمالي المصاريف</span>
+                        <div class="w-10 h-10 rounded-xl bg-rose-500/10 text-rose-400 flex items-center justify-center text-lg">
+                            <i class="fa-solid fa-arrow-up-right"></i>
+                        </div>
+                    </div>
+                    <div class="flex items-baseline gap-2">
+                        <h3 id="totalExpenses" class="text-3xl font-extrabold text-white tracking-tight">0</h3>
+                        <span class="text-sm font-bold text-rose-400">ر.س</span>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-gray-800/60 flex items-center justify-between text-xs text-gray-400">
+                        <span>أعلى فئة صرف</span>
+                        <span id="topCategoryDisplay" class="font-bold text-amber-400">-</span>
+                    </div>
+                </div>
+
+                <!-- Current Balance Card -->
+                <div class="glass-panel p-6 rounded-3xl relative overflow-hidden group border-amber-500/30 gold-glow">
+                    <div class="absolute -left-4 -bottom-4 w-24 h-24 bg-amber-500/10 rounded-full blur-2xl group-hover:bg-amber-500/20 transition-all"></div>
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="text-sm font-semibold text-gray-300">الرصيد المتبقي</span>
+                        <div id="balanceIconBox" class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-lg">
+                            <i class="fa-solid fa-scale-balanced"></i>
+                        </div>
+                    </div>
+                    <div class="flex items-baseline gap-2">
+                        <h3 id="netBalance" class="text-3xl font-extrabold text-white tracking-tight">0</h3>
+                        <span class="text-sm font-bold text-amber-400">ر.س</span>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-gray-800/60 flex items-center justify-between text-xs">
+                        <span class="text-gray-400">الحالة المالية</span>
+                        <span id="financialStatus" class="font-bold px-2 py-0.5 rounded text-amber-400 bg-amber-500/10">مستقر</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Visual Analytics Section -->
+            <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Pie/Donut Chart Container -->
+                <div class="glass-panel p-6 rounded-3xl flex flex-col justify-between">
+                    <div class="flex items-center justify-between mb-6">
+                        <div>
+                            <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                                <i class="fa-solid fa-chart-pie text-amber-500"></i>
+                                توزيع المصاريف حسب الفئات
+                            </h2>
+                            <p class="text-xs text-gray-400 mt-0.5">تفاصيل الإنفاق لكافة الأقسام</p>
+                        </div>
+                    </div>
+                    <div class="relative flex items-center justify-center min-h-[260px]">
+                        <canvas id="categoryChart" width="280" height="280" class="max-w-[260px] max-h-[260px]"></canvas>
+                        <div id="chartCenterText" class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center">
+                            <span class="text-xs text-gray-400">المجموع</span>
+                            <span id="chartTotalAmount" class="text-base font-extrabold text-white">0 ر.س</span>
+                        </div>
+                    </div>
+                    <div id="chartLegend" class="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-6 pt-4 border-t border-gray-800/60 text-xs"></div>
+                </div>
+
+                <!-- Bar Chart Container -->
+                <div class="glass-panel p-6 rounded-3xl flex flex-col justify-between">
+                    <div class="flex items-center justify-between mb-6">
+                        <div>
+                            <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                                <i class="fa-solid fa-chart-column text-amber-500"></i>
+                                تحليل التدفق المالي الأسبوعي
+                            </h2>
+                            <p class="text-xs text-gray-400 mt-0.5">مقارنة بين الدخل والمصاريف لأحدث الأيام</p>
+                        </div>
+                    </div>
+                    <div class="relative w-full h-[260px] flex items-end justify-between px-2 pt-8 border-b border-gray-800/80" id="barChartContainer"></div>
+                    <div class="flex justify-center gap-6 mt-6 pt-4 border-t border-gray-800/60 text-xs font-semibold">
+                        <div class="flex items-center gap-2">
+                            <span class="w-3 h-3 rounded-full bg-emerald-500 inline-block"></span>
+                            <span class="text-gray-300">الدخل</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="w-3 h-3 rounded-full bg-rose-500 inline-block"></span>
+                            <span class="text-gray-300">المصاريف</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Filter & Search Controls + Transactions Table -->
+            <section class="glass-panel rounded-3xl p-6 space-y-6">
+                <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-6 border-b border-gray-800/80">
+                    <div>
+                        <h2 class="text-xl font-bold text-white flex items-center gap-2.5">
+                            <i class="fa-solid fa-list-check text-amber-500"></i>
+                            سجل العمليات المالية
+                        </h2>
+                        <p class="text-xs text-gray-400 mt-1">تصفية، ابحث، وإدارة كامل العمليات بسهولة</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-3">
+                        <!-- User View Filter for Admin -->
+                        <div id="adminUserFilterContainer" class="hidden">
+                            <select id="userFilter" onchange="renderTransactions()" class="w-full bg-dark-base border border-amber-500/40 focus:border-amber-500 text-sm rounded-xl px-3 py-2 text-amber-400 outline-none transition-all">
+                                <option value="all">جميع المستخدمين</option>
+                            </select>
+                        </div>
+
+                        <!-- Search input -->
+                        <div class="relative">
+                            <i class="fa-solid fa-magnifying-glass absolute right-3.5 top-3.5 text-gray-500 text-sm"></i>
+                            <input type="text" id="searchInput" oninput="renderTransactions()" placeholder="بحث في الوصف..." class="w-full pr-10 pl-3 py-2 bg-dark-base border border-dark-border focus:border-amber-500 text-sm rounded-xl text-white outline-none transition-all placeholder:text-gray-600">
+                        </div>
+
+                        <!-- Type Filter -->
+                        <select id="typeFilter" onchange="renderTransactions()" class="bg-dark-base border border-dark-border focus:border-amber-500 text-sm rounded-xl px-3 py-2 text-white outline-none transition-all">
+                            <option value="all">كافة العمليات</option>
+                            <option value="expense">المصاريف فقط</option>
+                            <option value="income">الدخل فقط</option>
+                        </select>
+
+                        <!-- Category Filter -->
+                        <select id="categoryFilter" onchange="renderTransactions()" class="bg-dark-base border border-dark-border focus:border-amber-500 text-sm rounded-xl px-3 py-2 text-white outline-none transition-all">
+                            <option value="all">كافة الفئات</option>
+                            <option value="سكن وفواتير">سكن وفواتير</option>
+                            <option value="طعام ومشتريات">طعام ومشتريات</option>
+                            <option value="سيارة ونقل">سيارة ونقل</option>
+                            <option value="ترفيه وتسوق">ترفيه وتسوق</option>
+                            <option value="صحة وعناية">صحة وعناية</option>
+                            <option value="راتب ودخل">راتب ودخل</option>
+                            <option value="استثمار وأرباح">استثمار وأرباح</option>
+                            <option value="أخرى">أخرى</option>
+                        </select>
+
+                        <!-- Reset Filter Button -->
+                        <button onclick="resetFilters()" class="px-3 py-2 bg-dark-base hover:bg-dark-border border border-dark-border text-gray-300 hover:text-white rounded-xl text-sm transition-all flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-rotate-left text-xs"></i>
+                            إعادة ضبط
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Transactions Table List -->
+                <div class="overflow-x-auto">
+                    <table class="w-full text-right border-collapse">
+                        <thead>
+                            <tr class="text-xs font-bold text-gray-400 border-b border-gray-800/80 bg-dark-base/40">
+                                <th class="py-3.5 px-4 rounded-r-xl">النوع والفئة</th>
+                                <th class="py-3.5 px-4">المستخدم</th>
+                                <th class="py-3.5 px-4">التاريخ</th>
+                                <th class="py-3.5 px-4">الوصف / ملاحظات</th>
+                                <th class="py-3.5 px-4">المبلغ</th>
+                                <th class="py-3.5 px-4 rounded-l-xl text-center">إجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transactionTableBody" class="divide-y divide-gray-800/50 text-sm"></tbody>
+                    </table>
+
+                    <!-- Empty State -->
+                    <div id="emptyState" class="hidden flex-col items-center justify-center py-12 text-center">
+                        <div class="w-16 h-16 rounded-full bg-dark-base flex items-center justify-center text-gray-600 text-2xl mb-3 border border-dark-border">
+                            <i class="fa-solid fa-receipt"></i>
+                        </div>
+                        <h4 class="text-base font-bold text-gray-300">لا توجد عمليات مسجلة</h4>
+                        <p class="text-xs text-gray-500 mt-1 max-w-sm">قم بإضافة عملية جديدة أو غير إعدادات التصفية.</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
 
     <!-- Modal Form for Add/Edit Transaction -->
     <div id="transactionModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm opacity-0 pointer-events-none transition-all duration-300">
@@ -330,6 +387,108 @@
                 </button>
             </div>
 
+            <form id="transactionForm" onsubmit="handleFormSubmit(event)" class="space-y-4">
+                <input type="hidden" id="editId">
+                
+                <div class="grid grid-cols-2 gap-2 p-1 bg-dark-base rounded-2xl border border-dark-border">
+                    <button type="button" id="btnTypeExpense" onclick="setFormType('expense')" class="py-2.5 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-2 bg-rose-500 text-white shadow-md">
+                        <i class="fa-solid fa-arrow-up-right"></i>
+                        <span>مصروف</span>
+                    </button>
+                    <button type="button" id="btnTypeIncome" onclick="setFormType('income')" class="py-2.5 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-2 text-gray-400 hover:text-white">
+                        <i class="fa-solid fa-arrow-down-left"></i>
+                        <span>دخل</span>
+                    </button>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-400 mb-1.5">المبلغ (ر.س)</label>
+                    <input type="number" id="txAmount" step="any" required placeholder="0.00" class="w-full bg-dark-base border border-dark-border focus:border-amber-500 rounded-xl px-4 py-2.5 text-white font-bold text-lg outline-none transition-all">
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-400 mb-1.5">الفئة</label>
+                        <select id="txCategory" required class="w-full bg-dark-base border border-dark-border focus:border-amber-500 rounded-xl px-3 py-2.5 text-white text-sm outline-none transition-all"></select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-400 mb-1.5">التاريخ</label>
+                        <input type="date" id="txDate" required class="w-full bg-dark-base border border-dark-border focus:border-amber-500 rounded-xl px-3 py-2.5 text-white text-sm outline-none transition-all">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-400 mb-1.5">الوصف / ملاحظات</label>
+                    <input type="text" id="txDescription" required placeholder="مثال: فاتورة الكهرباء، شراء مستلزمات..." class="w-full bg-dark-base border border-dark-border focus:border-amber-500 rounded-xl px-4 py-2.5 text-white text-sm outline-none transition-all">
+                </div>
+
+                <div class="pt-4 border-t border-gray-800 flex items-center justify-end gap-3">
+                    <button type="button" onclick="closeModal()" class="px-4 py-2.5 rounded-xl border border-dark-border text-gray-400 hover:text-white text-sm">إلغاء</button>
+                    <button type="submit" class="px-6 py-2.5 rounded-xl text-slate-950 font-extrabold gold-gradient hover:brightness-110 shadow-lg shadow-amber-500/20 text-sm" id="submitBtnText">حفظ العملية</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Admin Management Modal -->
+    <div id="adminModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md opacity-0 pointer-events-none transition-all duration-300">
+        <div class="bg-dark-card border border-amber-500/30 rounded-3xl w-full max-w-3xl p-6 m-4 shadow-2xl relative transform scale-95 transition-all duration-300 max-h-[90vh] overflow-y-auto" id="adminModalContainer">
+            <div class="flex items-center justify-between pb-4 mb-6 border-b border-gray-800">
+                <div>
+                    <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-users-gear text-amber-500"></i>
+                        لوحة إدارة الحسابات والمستخدمين
+                    </h3>
+                    <p class="text-xs text-gray-400 mt-0.5">إضافة مستخدمين جدد، تغيير كلمات المرور، وإدارة الصلاحيات</p>
+                </div>
+                <button onclick="closeAdminModal()" class="w-8 h-8 rounded-xl bg-dark-base hover:bg-gray-800 text-gray-400 hover:text-white flex items-center justify-center transition-all">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Create User Form -->
+            <form onsubmit="handleCreateUser(event)" class="bg-dark-base p-4 rounded-2xl border border-dark-border mb-6 space-y-4">
+                <h4 class="text-sm font-bold text-amber-400 flex items-center gap-2">
+                    <i class="fa-solid fa-user-plus"></i> إنشاء حساب مستخدم جديد
+                </h4>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <input type="text" id="newUsername" placeholder="اسم المستخدم" required class="bg-dark-card border border-dark-border focus:border-amber-500 rounded-xl px-3 py-2 text-white text-sm outline-none">
+                    <input type="text" id="newFullName" placeholder="الاسم الكامل" required class="bg-dark-card border border-dark-border focus:border-amber-500 rounded-xl px-3 py-2 text-white text-sm outline-none">
+                    <input type="password" id="newPassword" placeholder="كلمة المرور" required class="bg-dark-card border border-dark-border focus:border-amber-500 rounded-xl px-3 py-2 text-white text-sm outline-none">
+                </div>
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2 text-xs text-gray-400">
+                        <input type="checkbox" id="newIsAdmin" class="rounded accent-amber-500">
+                        <label for="newIsAdmin">منح صلاحية المدير العام (Admin)</label>
+                    </div>
+                    <button type="submit" class="px-5 py-2 rounded-xl text-slate-950 font-bold gold-gradient hover:brightness-110 text-xs flex items-center gap-1.5">
+                        <i class="fa-solid fa-plus"></i> إضافة الحساب
+                    </button>
+                </div>
+            </form>
+
+            <!-- Users List Table -->
+            <div>
+                <h4 class="text-sm font-bold text-gray-300 mb-3 flex items-center gap-2">
+                    <i class="fa-solid fa-users"></i> قائمة الحسابات المسجلة
+                </h4>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-right border-collapse text-xs">
+                        <thead>
+                            <tr class="text-gray-400 border-b border-gray-800 bg-dark-base">
+                                <th class="p-3">اسم المستخدم</th>
+                                <th class="p-3">الاسم الكامل</th>
+                                <th class="p-3">الصلاحية</th>
+                                <th class="p-3 text-center">إجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminUsersTableBody" class="divide-y divide-gray-800"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal for Generating Custom PDF Report -->
     <div id="reportModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md opacity-0 pointer-events-none transition-all duration-300">
         <div class="bg-dark-card border border-amber-500/30 rounded-3xl w-full max-w-xl p-6 m-4 shadow-2xl relative transform scale-95 transition-all duration-300" id="reportModalContainer">
@@ -339,7 +498,7 @@
                         <i class="fa-solid fa-file-invoice-dollar text-amber-500"></i>
                         إصدار تقرير وكشف حساب مفصل (PDF)
                     </h3>
-                    <p class="text-xs text-gray-400 mt-0.5">حدد النطاق الزمني والتصنيفات لطباعة أو تنزيل التقرير</p>
+                    <p class="text-xs text-gray-400 mt-0.5">حدد النطاق الزمني والتصنيفات لطباعة التقرير</p>
                 </div>
                 <button onclick="closeReportModal()" class="w-8 h-8 rounded-xl bg-dark-base hover:bg-gray-800 text-gray-400 hover:text-white flex items-center justify-center transition-all">
                     <i class="fa-solid fa-xmark"></i>
@@ -362,7 +521,7 @@
                     <div>
                         <label class="block text-xs font-semibold text-gray-400 mb-1.5">نوع العمليات</label>
                         <select id="reportType" class="w-full bg-dark-base border border-dark-border focus:border-amber-500 rounded-xl px-4 py-2.5 text-white text-sm outline-none">
-                            <option value="all">كافة العمليات (دخل ومصاريف)</option>
+                            <option value="all">كافة العمليات</option>
                             <option value="expense">المصاريف فقط</option>
                             <option value="income">الدخل فقط</option>
                         </select>
@@ -384,9 +543,7 @@
                 </div>
 
                 <div class="pt-4 border-t border-gray-800 flex items-center justify-end gap-3">
-                    <button type="button" onclick="closeReportModal()" class="px-4 py-2.5 rounded-xl border border-dark-border text-gray-400 hover:text-white text-sm">
-                        إلغاء
-                    </button>
+                    <button type="button" onclick="closeReportModal()" class="px-4 py-2.5 rounded-xl border border-dark-border text-gray-400 hover:text-white text-sm">إلغاء</button>
                     <button type="submit" class="px-6 py-2.5 rounded-xl text-slate-950 font-extrabold gold-gradient hover:brightness-110 shadow-lg shadow-amber-500/20 text-sm flex items-center gap-2">
                         <i class="fa-solid fa-download"></i>
                         <span>تنزيل التقرير (PDF)</span>
@@ -396,22 +553,20 @@
         </div>
     </div>
 
-    <!-- Hidden Container Prepared Specially for Generating PDF / Printing -->
-    <div id="pdfPrintTemplate" class="hidden">
-        <!-- Rendered dynamically during report generation -->
-    </div>
-
-    <!-- Toast Notifications Container -->
+    <div id="pdfPrintTemplate" class="hidden"></div>
     <div id="toastContainer" class="fixed bottom-6 right-6 z-50 flex flex-col gap-3 pointer-events-none"></div>
 
-    <!-- JavaScript Logic -->
     <script>
-        // Data Structure & Storage Key
-        const STORAGE_KEY = 'yam_expenses_data_v1';
+        // Storage Keys
+        const STORAGE_KEY_USERS = 'yam_users_v2';
+        const STORAGE_KEY_TXS = 'yam_expenses_data_v2';
+        const STORAGE_KEY_SESSION = 'yam_current_session';
+
+        let users = [];
         let transactions = [];
+        let currentUser = null;
         let currentFormType = 'expense';
 
-        // Category Configuration & Colors
         const categoryMap = {
             'سكن وفواتير': { icon: 'fa-house', color: '#F59E0B' },
             'طعام ومشتريات': { icon: 'fa-utensils', color: '#10B981' },
@@ -426,37 +581,130 @@
         const expenseCategories = ['سكن وفواتير', 'طعام ومشتريات', 'سيارة ونقل', 'ترفيه وتسوق', 'صحة وعناية', 'أخرى'];
         const incomeCategories = ['راتب ودخل', 'استثمار وأرباح', 'أخرى'];
 
-        // Init App
         window.addEventListener('DOMContentLoaded', () => {
-            loadTransactions();
-            document.getElementById('txDate').value = new Date().toISOString().split('T')[0];
-            updateCategoryOptions();
-            renderApp();
+            initDatabase();
+            checkSession();
         });
 
-        // Local Storage Handling
-        function loadTransactions() {
-            const stored = localStorage.getItem(STORAGE_KEY);
-            if (stored) {
-                try {
-                    transactions = JSON.parse(stored);
-                } catch (e) {
-                    transactions = [];
-                }
+        function initDatabase() {
+            // Load Users
+            const storedUsers = localStorage.getItem(STORAGE_KEY_USERS);
+            if (storedUsers) {
+                try { users = JSON.parse(storedUsers); } catch(e) { users = []; }
+            }
+            if (users.length === 0) {
+                users = [{ username: 'admin', password: 'admin123', fullName: 'المدير العام', role: 'admin' }];
+                saveUsers();
+            }
+
+            // Load Transactions
+            const storedTxs = localStorage.getItem(STORAGE_KEY_TXS);
+            if (storedTxs) {
+                try { transactions = JSON.parse(storedTxs); } catch(e) { transactions = []; }
             } else {
-                // Initialize with sample demo data
-                transactions = getDemoData();
+                transactions = getDemoData('admin');
                 saveTransactions();
             }
         }
 
+        function saveUsers() {
+            localStorage.setItem(STORAGE_KEY_USERS, JSON.stringify(users));
+        }
+
         function saveTransactions() {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions));
+            localStorage.setItem(STORAGE_KEY_TXS, JSON.stringify(transactions));
+            if (currentUser) renderApp();
+        }
+
+        function checkSession() {
+            const savedUsername = localStorage.getItem(STORAGE_KEY_SESSION);
+            if (savedUsername) {
+                const user = users.find(u => u.username === savedUsername);
+                if (user) {
+                    loginUser(user);
+                    return;
+                }
+            }
+            showAuthScreen();
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const uInput = document.getElementById('loginUsername').value.trim().toLowerCase();
+            const pInput = document.getElementById('loginPassword').value.trim();
+
+            const user = users.find(u => u.username.toLowerCase() === uInput && u.password === pInput);
+            if (user) {
+                loginUser(user);
+                showToast(`أهلاً بعودتك يا ${user.fullName}`, 'success');
+            } else {
+                showToast('اسم المستخدم أو كلمة المرور غير صحيحة', 'error');
+            }
+        }
+
+        function loginUser(user) {
+            currentUser = user;
+            localStorage.setItem(STORAGE_KEY_SESSION, user.username);
+            document.getElementById('authContainer').classList.add('hidden');
+            document.getElementById('appContainer').classList.remove('hidden');
+
+            document.getElementById('currentUserDisplay').innerText = user.fullName;
+            const badge = document.getElementById('userBadge');
+            const adminBtn = document.getElementById('adminBtn');
+            const adminUserFilter = document.getElementById('adminUserFilterContainer');
+
+            if (user.role === 'admin') {
+                badge.innerText = 'المدير العام';
+                badge.className = 'text-xs px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/40 font-bold';
+                adminBtn.classList.remove('hidden');
+                adminUserFilter.classList.remove('hidden');
+                populateAdminUserFilter();
+            } else {
+                badge.innerText = 'مستخدم';
+                badge.className = 'text-xs px-2 py-0.5 rounded bg-blue-500/20 text-blue-400 border border-blue-500/40 font-bold';
+                adminBtn.classList.add('hidden');
+                adminUserFilter.classList.add('hidden');
+            }
+
+            document.getElementById('txDate').value = new Date().toISOString().split('T')[0];
+            updateCategoryOptions();
             renderApp();
         }
 
-        // Demo Data Generation
-        function getDemoData() {
+        function handleLogout() {
+            currentUser = null;
+            localStorage.removeItem(STORAGE_KEY_SESSION);
+            showAuthScreen();
+            showToast('تم تسجيل الخروج بنجاح', 'success');
+        }
+
+        function showAuthScreen() {
+            document.getElementById('authContainer').classList.remove('hidden');
+            document.getElementById('appContainer').classList.add('hidden');
+        }
+
+        function populateAdminUserFilter() {
+            const select = document.getElementById('userFilter');
+            select.innerHTML = '<option value="all">جميع المستخدمين</option>';
+            users.forEach(u => {
+                const opt = document.createElement('option');
+                opt.value = u.username;
+                opt.textContent = `${u.fullName} (${u.username})`;
+                select.appendChild(opt);
+            });
+        }
+
+        function getUserTransactions() {
+            if (!currentUser) return [];
+            if (currentUser.role === 'admin') {
+                const filterVal = document.getElementById('userFilter')?.value || 'all';
+                if (filterVal === 'all') return transactions;
+                return transactions.filter(t => t.userId === filterVal);
+            }
+            return transactions.filter(t => t.userId === currentUser.username);
+        }
+
+        function getDemoData(username) {
             const today = new Date();
             const formatDate = (offsetDays) => {
                 const d = new Date(today);
@@ -465,36 +713,36 @@
             };
 
             return [
-                { id: '1', type: 'income', amount: 15000, category: 'راتب ودخل', date: formatDate(10), description: 'الراتب الشهري الأساسي' },
-                { id: '2', type: 'expense', amount: 3500, category: 'سكن وفواتير', date: formatDate(8), description: 'إيجار شقة الشهر' },
-                { id: '3', type: 'expense', amount: 450, category: 'سكن وفواتير', date: formatDate(7), description: 'فاتورة الكهرباء والماء' },
-                { id: '4', type: 'expense', amount: 650, category: 'طعام ومشتريات', date: formatDate(5), description: 'شراء مقاضي السوبرماركت' },
-                { id: '5', type: 'expense', amount: 320, category: 'سيارة ونقل', date: formatDate(3), description: 'بنزين السيارة وصيانة سريعة' },
-                { id: '6', type: 'income', amount: 1200, category: 'استثمار وأرباح', date: formatDate(2), description: 'عائد أسهم ومحفظة' },
-                { id: '7', type: 'expense', amount: 280, category: 'ترفيه وتسوق', date: formatDate(1), description: 'عشاء مع الأصدقاء' }
+                { id: '1', userId: username, type: 'income', amount: 15000, category: 'راتب ودخل', date: formatDate(10), description: 'الراتب الشهري الأساسي' },
+                { id: '2', userId: username, type: 'expense', amount: 3500, category: 'سكن وفواتير', date: formatDate(8), description: 'إيجار شقة الشهر' },
+                { id: '3', userId: username, type: 'expense', amount: 450, category: 'سكن وفواتير', date: formatDate(7), description: 'فاتورة الكهرباء والماء' },
+                { id: '4', userId: username, type: 'expense', amount: 650, category: 'طعام ومشتريات', date: formatDate(5), description: 'شراء مقاضي السوبرماركت' },
+                { id: '5', userId: username, type: 'expense', amount: 320, category: 'سيارة ونقل', date: formatDate(3), description: 'بنزين السيارة وصيانة سريعة' },
+                { id: '6', userId: username, type: 'income', amount: 1200, category: 'استثمار وأرباح', date: formatDate(2), description: 'عائد أسهم ومحفظة' },
+                { id: '7', userId: username, type: 'expense', amount: 280, category: 'ترفيه وتسوق', date: formatDate(1), description: 'عشاء مع الأصدقاء' }
             ];
         }
 
         function loadDemoData() {
-            transactions = getDemoData();
+            const userTxs = getDemoData(currentUser.username);
+            transactions = transactions.filter(t => t.userId !== currentUser.username).concat(userTxs);
             saveTransactions();
             showToast('تم تحميل البيانات التجريبية بنجاح', 'success');
         }
 
-        // Main App Render
         function renderApp() {
             calculateSummary();
             renderTransactions();
             renderCharts();
         }
 
-        // Summary Calculation & Status Updates
         function calculateSummary() {
             let totalIncome = 0;
             let totalExpenses = 0;
             const categoryTotals = {};
+            const userTxs = getUserTransactions();
 
-            transactions.forEach(t => {
+            userTxs.forEach(t => {
                 const amt = parseFloat(t.amount) || 0;
                 if (t.type === 'income') {
                     totalIncome += amt;
@@ -506,16 +754,13 @@
 
             const netBalance = totalIncome - totalExpenses;
 
-            // Render Totals
             document.getElementById('totalIncome').innerText = totalIncome.toLocaleString('ar-SA', { minimumFractionDigits: 0 });
             document.getElementById('totalExpenses').innerText = totalExpenses.toLocaleString('ar-SA', { minimumFractionDigits: 0 });
             document.getElementById('netBalance').innerText = netBalance.toLocaleString('ar-SA', { minimumFractionDigits: 0 });
 
-            // Income ratio
             const ratio = totalIncome > 0 ? Math.round(((totalIncome - totalExpenses) / totalIncome) * 100) : 0;
             document.getElementById('incomePercentage').innerText = `${ratio}% متوفر`;
 
-            // Top Expense Category
             let topCat = '-';
             let maxAmt = 0;
             for (const [cat, amt] of Object.entries(categoryTotals)) {
@@ -526,7 +771,6 @@
             }
             document.getElementById('topCategoryDisplay').innerText = topCat;
 
-            // Balance Status & Styling
             const statusEl = document.getElementById('financialStatus');
             const iconBox = document.getElementById('balanceIconBox');
 
@@ -545,7 +789,6 @@
             }
         }
 
-        // Render Transaction Table List
         function renderTransactions() {
             const tableBody = document.getElementById('transactionTableBody');
             const emptyState = document.getElementById('emptyState');
@@ -553,16 +796,14 @@
             const typeVal = document.getElementById('typeFilter').value;
             const catVal = document.getElementById('categoryFilter').value;
 
-            // Filter logic
-            const filtered = transactions.filter(t => {
+            const userTxs = getUserTransactions();
+
+            const filtered = userTxs.filter(t => {
                 const matchSearch = t.description.toLowerCase().includes(searchVal);
                 const matchType = typeVal === 'all' || t.type === typeVal;
                 const matchCat = catVal === 'all' || t.category === catVal;
                 return matchSearch && matchType && matchCat;
-            });
-
-            // Sort by Date Descending
-            filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
+            }).sort((a, b) => new Date(b.date) - new Date(a.date));
 
             tableBody.innerHTML = '';
 
@@ -576,6 +817,8 @@
                 filtered.forEach(t => {
                     const isExpense = t.type === 'expense';
                     const catInfo = categoryMap[t.category] || { icon: 'fa-tag', color: '#64748B' };
+                    const owner = users.find(u => u.username === t.userId);
+                    const ownerName = owner ? owner.fullName : t.userId;
 
                     const tr = document.createElement('tr');
                     tr.className = 'hover:bg-dark-hover/60 transition-all group';
@@ -591,6 +834,9 @@
                                     <div class="text-xs text-gray-400 font-medium">${isExpense ? 'مصروف' : 'دخل'}</div>
                                 </div>
                             </div>
+                        </td>
+                        <td class="py-4 px-4 text-xs font-semibold text-amber-400">
+                            ${ownerName}
                         </td>
                         <td class="py-4 px-4 text-xs font-semibold text-gray-300">
                             ${t.date}
@@ -617,20 +863,120 @@
             }
         }
 
-        // Reset Filters
         function resetFilters() {
             document.getElementById('searchInput').value = '';
             document.getElementById('typeFilter').value = 'all';
             document.getElementById('categoryFilter').value = 'all';
+            if (currentUser.role === 'admin') document.getElementById('userFilter').value = 'all';
             renderTransactions();
         }
 
-        // PDF Report Modal Controls
+        // Admin Dashboard Modal Controls
+        function openAdminModal() {
+            if (currentUser.role !== 'admin') return;
+            const modal = document.getElementById('adminModal');
+            const container = document.getElementById('adminModalContainer');
+            renderAdminUsersList();
+            modal.classList.remove('opacity-0', 'pointer-events-none');
+            container.classList.remove('scale-95');
+            container.classList.add('scale-100');
+        }
+
+        function closeAdminModal() {
+            const modal = document.getElementById('adminModal');
+            const container = document.getElementById('adminModalContainer');
+            container.classList.remove('scale-100');
+            container.classList.add('scale-95');
+            modal.classList.add('opacity-0', 'pointer-events-none');
+        }
+
+        function renderAdminUsersList() {
+            const tbody = document.getElementById('adminUsersTableBody');
+            tbody.innerHTML = '';
+
+            users.forEach(u => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-dark-hover/50 transition-all';
+                tr.innerHTML = `
+                    <td class="p-3 font-bold text-white">${u.username}</td>
+                    <td class="p-3 text-gray-300">${u.fullName}</td>
+                    <td class="p-3 font-semibold ${u.role === 'admin' ? 'text-amber-400' : 'text-blue-400'}">${u.role === 'admin' ? 'مدير عام' : 'مستخدم عادي'}</td>
+                    <td class="p-3 text-center">
+                        <div class="flex items-center justify-center gap-2">
+                            <button onclick="promptResetPassword('${u.username}')" class="px-2 py-1 bg-dark-card border border-dark-border hover:border-amber-500 text-gray-300 hover:text-amber-400 rounded text-[11px]" title="تغيير كلمة المرور">
+                                <i class="fa-solid fa-key"></i> كلمة المرور
+                            </button>
+                            ${u.username !== 'admin' ? `
+                                <button onclick="deleteUser('${u.username}')" class="p-1 bg-dark-card border border-dark-border hover:border-rose-500 text-rose-400 rounded text-[11px]" title="حذف الحساب">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            ` : ''}
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function handleCreateUser(e) {
+            e.preventDefault();
+            const username = document.getElementById('newUsername').value.trim().toLowerCase();
+            const fullName = document.getElementById('newFullName').value.trim();
+            const password = document.getElementById('newPassword').value.trim();
+            const isAdmin = document.getElementById('newIsAdmin').checked;
+
+            if (users.some(u => u.username === username)) {
+                showToast('اسم المستخدم مأخوذ مسبقاً', 'error');
+                return;
+            }
+
+            users.push({
+                username,
+                password,
+                fullName,
+                role: isAdmin ? 'admin' : 'user'
+            });
+
+            saveUsers();
+            populateAdminUserFilter();
+            renderAdminUsersList();
+
+            document.getElementById('newUsername').value = '';
+            document.getElementById('newFullName').value = '';
+            document.getElementById('newPassword').value = '';
+            document.getElementById('newIsAdmin').checked = false;
+
+            showToast('تم إضافة المستخدم بنجاح', 'success');
+        }
+
+        function promptResetPassword(username) {
+            const newPass = prompt(`أدخل كلمة المرور الجديدة للحساب (${username}):`);
+            if (newPass && newPass.trim() !== '') {
+                const user = users.find(u => u.username === username);
+                if (user) {
+                    user.password = newPass.trim();
+                    saveUsers();
+                    showToast('تم تحديث كلمة المرور بنجاح', 'success');
+                }
+            }
+        }
+
+        function deleteUser(username) {
+            if (confirm(`هل أنت تأكد من حذف الحساب (${username}) وكافة مصروفاته؟`)) {
+                users = users.filter(u => u.username !== username);
+                transactions = transactions.filter(t => t.userId !== username);
+                saveUsers();
+                saveTransactions();
+                populateAdminUserFilter();
+                renderAdminUsersList();
+                showToast('تم حذف الحساب بنجاح', 'success');
+            }
+        }
+
+        // PDF Report Controls
         function openReportModal() {
             const modal = document.getElementById('reportModal');
             const container = document.getElementById('reportModalContainer');
-
-            // Default dates (Start of month to today)
             const now = new Date();
             const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
             const today = now.toISOString().split('T')[0];
@@ -646,23 +992,21 @@
         function closeReportModal() {
             const modal = document.getElementById('reportModal');
             const container = document.getElementById('reportModalContainer');
-
             container.classList.remove('scale-100');
             container.classList.add('scale-95');
             modal.classList.add('opacity-0', 'pointer-events-none');
         }
 
-        // High-Quality PDF Report Generation
         function generatePdfReport(e) {
             e.preventDefault();
-            
             const startDate = document.getElementById('reportStartDate').value;
             const endDate = document.getElementById('reportEndDate').value;
             const typeFilter = document.getElementById('reportType').value;
             const catFilter = document.getElementById('reportCategory').value;
 
-            // Filter transactions
-            const filtered = transactions.filter(t => {
+            const userTxs = getUserTransactions();
+
+            const filtered = userTxs.filter(t => {
                 const isAfterStart = !startDate || t.date >= startDate;
                 const isBeforeEnd = !endDate || t.date <= endDate;
                 const matchType = typeFilter === 'all' || t.type === typeFilter;
@@ -683,15 +1027,13 @@
             });
             const net = incomeSum - expenseSum;
 
-            // Render PDF View Component
             const template = document.getElementById('pdfPrintTemplate');
             template.innerHTML = `
                 <div style="font-family: 'Cairo', sans-serif; direction: rtl; padding: 30px; background-color: #ffffff; color: #1e293b; max-width: 800px; margin: 0 auto;">
-                    <!-- Report Header -->
                     <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f59e0b; padding-bottom: 20px; margin-bottom: 24px;">
                         <div>
                             <h1 style="font-size: 26px; font-weight: 800; color: #0f172a; margin: 0;">مصاريف يام</h1>
-                            <p style="font-size: 13px; color: #64748b; margin-top: 4px;">كشف حساب وتقييم مالي تفصيلي</p>
+                            <p style="font-size: 13px; color: #64748b; margin-top: 4px;">كشف حساب للمستخدم: <strong>${currentUser.fullName}</strong></p>
                         </div>
                         <div style="text-align: left;">
                             <div style="font-size: 12px; color: #64748b;">تاريخ الإصدار</div>
@@ -699,14 +1041,12 @@
                         </div>
                     </div>
 
-                    <!-- Meta Information -->
                     <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px 18px; margin-bottom: 24px; display: flex; justify-content: space-between; font-size: 13px;">
                         <div><strong>الفترة الزمنية:</strong> من ${startDate || 'البداية'} إلى ${endDate || 'اليوم'}</div>
                         <div><strong>نوع التقرير:</strong> ${typeFilter === 'all' ? 'جميع العمليات' : typeFilter === 'expense' ? 'المصاريف فقط' : 'الدخل فقط'}</div>
                         <div><strong>إجمالي العمليات:</strong> ${filtered.length} عملية</div>
                     </div>
 
-                    <!-- Summary Metrics Cards -->
                     <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 24px;">
                         <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 14px; border-radius: 12px; text-align: center;">
                             <div style="font-size: 11px; color: #166534; font-weight: 700;">إجمالي الدخل</div>
@@ -722,16 +1062,14 @@
                         </div>
                     </div>
 
-                    <!-- Detailed Table -->
                     <table style="width: 100%; border-collapse: collapse; font-size: 12px; text-align: right; margin-bottom: 30px;">
                         <thead>
                             <tr style="background-color: #0f172a; color: #ffffff;">
-                                <th style="padding: 10px 12px; border-radius: 0 8px 8px 0;">#</th>
+                                <th style="padding: 10px 12px;">#</th>
                                 <th style="padding: 10px 12px;">التاريخ</th>
                                 <th style="padding: 10px 12px;">الفئة</th>
                                 <th style="padding: 10px 12px;">الوصف</th>
-                                <th style="padding: 10px 12px;">النوع</th>
-                                <th style="padding: 10px 12px; border-radius: 8px 0 0 8px;">المبلغ</th>
+                                <th style="padding: 10px 12px;">المبلغ</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -741,33 +1079,28 @@
                                     <td style="padding: 10px 12px; font-weight: 600;">${t.date}</td>
                                     <td style="padding: 10px 12px;">${t.category}</td>
                                     <td style="padding: 10px 12px;">${t.description}</td>
-                                    <td style="padding: 10px 12px; font-weight: 700; color: ${t.type === 'income' ? '#16a34a' : '#dc2626'};">${t.type === 'income' ? 'دخل' : 'مصروف'}</td>
                                     <td style="padding: 10px 12px; font-weight: 800; color: ${t.type === 'income' ? '#16a34a' : '#dc2626'};">${parseFloat(t.amount).toLocaleString('ar-SA')} ر.س</td>
                                 </tr>
                             `).join('')}
                         </tbody>
                     </table>
 
-                    <!-- Report Footer -->
                     <div style="border-top: 1px solid #e2e8f0; pt: 16px; display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: #94a3b8;">
-                        <div>تم إصدار التقرير بواسطة تطبيق <strong>مصاريف يام</strong> © ${new Date().getFullYear()}</div>
-                        <div>توقيع الاعتماد: _________________</div>
+                        <div>تم إصدار التقرير بواسطة تطبيق <strong>مصاريف يام</strong></div>
+                        <div>التاريخ: ${new Date().toLocaleDateString('ar-SA')}</div>
                     </div>
                 </div>
             `;
 
-            // HTML to PDF configuration
             const opt = {
-                margin:       10,
-                filename:     `كشف_حساب_مصاريف_يام_${startDate}_إلى_${endDate}.pdf`,
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2 },
-                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                margin: 10,
+                filename: `كشف_حساب_مصاريف_يام_${startDate}_إلى_${endDate}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
 
             showToast('جاري إنشاء تقرير PDF...', 'success');
-            
-            // Execute generation using html2pdf
             html2pdf().set(opt).from(template.firstElementChild).save().then(() => {
                 closeReportModal();
                 showToast('تم إخراج التقرير وتنزيله بنجاح!', 'success');
@@ -776,7 +1109,7 @@
             });
         }
 
-        // Form & Modal Controls
+        // Form Controls
         function openModal(editId = null) {
             const modal = document.getElementById('transactionModal');
             const modalContainer = document.getElementById('modalContainer');
@@ -814,7 +1147,6 @@
         function closeModal() {
             const modal = document.getElementById('transactionModal');
             const modalContainer = document.getElementById('modalContainer');
-
             modalContainer.classList.remove('scale-100');
             modalContainer.classList.add('scale-95');
             modal.classList.add('opacity-0', 'pointer-events-none');
@@ -832,7 +1164,6 @@
                 btnIncome.className = 'py-2.5 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-2 bg-emerald-500 text-white shadow-md';
                 btnExpense.className = 'py-2.5 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-2 text-gray-400 hover:text-white';
             }
-
             updateCategoryOptions();
         }
 
@@ -840,7 +1171,6 @@
             const select = document.getElementById('txCategory');
             select.innerHTML = '';
             const cats = currentFormType === 'expense' ? expenseCategories : incomeCategories;
-
             cats.forEach(c => {
                 const opt = document.createElement('option');
                 opt.value = c;
@@ -851,7 +1181,6 @@
 
         function handleFormSubmit(e) {
             e.preventDefault();
-
             const editId = document.getElementById('editId').value;
             const amount = parseFloat(document.getElementById('txAmount').value);
             const category = document.getElementById('txCategory').value;
@@ -864,11 +1193,10 @@
             }
 
             if (editId) {
-                // Update
                 const index = transactions.findIndex(t => t.id === editId);
                 if (index !== -1) {
                     transactions[index] = {
-                        id: editId,
+                        ...transactions[index],
                         type: currentFormType,
                         amount,
                         category,
@@ -878,9 +1206,9 @@
                     showToast('تم تعديل العملية بنجاح', 'success');
                 }
             } else {
-                // Add New
                 const newTx = {
                     id: Date.now().toString(),
+                    userId: currentUser.username,
                     type: currentFormType,
                     amount,
                     category,
@@ -907,7 +1235,7 @@
             }
         }
 
-        // Charts Canvas & Rendering Logic
+        // Charts Logic
         function renderCharts() {
             renderDonutChart();
             renderBarChart();
@@ -919,11 +1247,11 @@
             const legendContainer = document.getElementById('chartLegend');
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Expense Category Totals
             const totals = {};
             let totalExpenseSum = 0;
+            const userTxs = getUserTransactions();
 
-            transactions.filter(t => t.type === 'expense').forEach(t => {
+            userTxs.filter(t => t.type === 'expense').forEach(t => {
                 const amt = parseFloat(t.amount) || 0;
                 totals[t.category] = (totals[t.category] || 0) + amt;
                 totalExpenseSum += amt;
@@ -935,7 +1263,6 @@
             const categories = Object.keys(totals);
 
             if (categories.length === 0 || totalExpenseSum === 0) {
-                // Render Empty Donut Circle
                 ctx.beginPath();
                 ctx.arc(140, 140, 100, 0, 2 * Math.PI);
                 ctx.strokeStyle = '#1F293D';
@@ -951,7 +1278,6 @@
                 const sliceAngle = (amt / totalExpenseSum) * 2 * Math.PI;
                 const color = categoryMap[cat]?.color || '#64748B';
 
-                // Draw Slice
                 ctx.beginPath();
                 ctx.arc(140, 140, 100, startAngle, startAngle + sliceAngle);
                 ctx.strokeStyle = color;
@@ -960,7 +1286,6 @@
 
                 startAngle += sliceAngle;
 
-                // Legend
                 const perc = Math.round((amt / totalExpenseSum) * 100);
                 const item = document.createElement('div');
                 item.className = 'flex items-center justify-between p-1.5 bg-dark-base/50 rounded-lg border border-dark-border';
@@ -979,9 +1304,9 @@
             const container = document.getElementById('barChartContainer');
             container.innerHTML = '';
 
-            // Group data by last 7 unique dates
             const daysMap = {};
             const today = new Date();
+            const userTxs = getUserTransactions();
 
             for (let i = 6; i >= 0; i--) {
                 const d = new Date(today);
@@ -990,7 +1315,7 @@
                 daysMap[dateStr] = { income: 0, expense: 0, label: `${d.getDate()}/${d.getMonth() + 1}` };
             }
 
-            transactions.forEach(t => {
+            userTxs.forEach(t => {
                 if (daysMap[t.date]) {
                     const amt = parseFloat(t.amount) || 0;
                     if (t.type === 'income') daysMap[t.date].income += amt;
@@ -998,14 +1323,12 @@
                 }
             });
 
-            // Find Max Value for Scale
             let maxVal = 1000;
             Object.values(daysMap).forEach(day => {
                 if (day.income > maxVal) maxVal = day.income;
                 if (day.expense > maxVal) maxVal = day.expense;
             });
 
-            // Create Bars
             Object.values(daysMap).forEach(day => {
                 const incHeight = Math.max(8, Math.round((day.income / maxVal) * 180));
                 const expHeight = Math.max(8, Math.round((day.expense / maxVal) * 180));
@@ -1015,13 +1338,11 @@
 
                 barGroup.innerHTML = `
                     <div class="flex items-end gap-1 h-[190px]">
-                        <!-- Income Bar -->
                         <div class="w-3 sm:w-4 bg-emerald-500 rounded-t-md transition-all relative group" style="height: ${incHeight}px">
                             <div class="absolute -top-8 right-1/2 translate-x-1/2 bg-dark-card border border-dark-border text-white text-[10px] px-2 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-all pointer-events-none whitespace-nowrap z-10">
                                 +${day.income}
                             </div>
                         </div>
-                        <!-- Expense Bar -->
                         <div class="w-3 sm:w-4 bg-rose-500 rounded-t-md transition-all relative group" style="height: ${expHeight}px">
                             <div class="absolute -top-8 right-1/2 translate-x-1/2 bg-dark-card border border-dark-border text-white text-[10px] px-2 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-all pointer-events-none whitespace-nowrap z-10">
                                 -${day.expense}
@@ -1030,17 +1351,17 @@
                     </div>
                     <span class="text-[11px] font-bold text-gray-400">${day.label}</span>
                 `;
-
                 container.appendChild(barGroup);
             });
         }
 
-        // Import & Export Backup Operations
+        // Import & Export
         function exportData() {
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(transactions, null, 2));
+            const userTxs = getUserTransactions();
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(userTxs, null, 2));
             const downloadAnchor = document.createElement('a');
             downloadAnchor.setAttribute("href", dataStr);
-            downloadAnchor.setAttribute("download", `مصاريف_يام_نسخة_احتياطية_${new Date().toISOString().split('T')[0]}.json`);
+            downloadAnchor.setAttribute("download", `مصاريف_${currentUser.username}_${new Date().toISOString().split('T')[0]}.json`);
             document.body.appendChild(downloadAnchor);
             downloadAnchor.click();
             downloadAnchor.remove();
@@ -1056,7 +1377,8 @@
                 try {
                     const imported = JSON.parse(e.target.result);
                     if (Array.isArray(imported)) {
-                        transactions = imported;
+                        const prepared = imported.map(t => ({ ...t, userId: currentUser.username }));
+                        transactions = transactions.filter(t => t.userId !== currentUser.username).concat(prepared);
                         saveTransactions();
                         showToast('تم استيراد البيانات بنجاح', 'success');
                     } else {
@@ -1069,11 +1391,9 @@
             reader.readAsText(file);
         }
 
-        // Toast Messages Component
         function showToast(message, type = 'success') {
             const container = document.getElementById('toastContainer');
             const toast = document.createElement('div');
-
             const isSuccess = type === 'success';
             const icon = isSuccess ? 'fa-circle-check text-emerald-400' : 'fa-triangle-exclamation text-rose-400';
             const borderColor = isSuccess ? 'border-emerald-500/30' : 'border-rose-500/30';
@@ -1085,11 +1405,7 @@
             `;
 
             container.appendChild(toast);
-
-            setTimeout(() => {
-                toast.classList.remove('translate-y-4', 'opacity-0');
-            }, 10);
-
+            setTimeout(() => toast.classList.remove('translate-y-4', 'opacity-0'), 10);
             setTimeout(() => {
                 toast.classList.add('opacity-0', 'translate-y-2');
                 setTimeout(() => toast.remove(), 300);
